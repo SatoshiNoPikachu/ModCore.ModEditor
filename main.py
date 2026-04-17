@@ -24,19 +24,28 @@ import SelectGUI
 import ExportToZip
 from glob import glob
 from pathlib import Path
+
 # from functools import partial
 
 ModEditorVersion = "0.6.2"
 
+
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(ModEditorGUI, self).__init__(parent)
+
+        self.autoresize = None
+        self.auto_replace_key_guid = None
+        self.last_open_dir = None
+        self.language = None
+        self.config = None
+
         self.setupUi(self)
 
         self.trans = QTranslator()
         logInit(os.path.join(QDir.currentPath(), "logoutput.log"))
-        self.loadConfig()
-        self.loadLanguage()        
+        self.load_config()
+        self.loadLanguage()
 
         self.dataInit()
         self.ui_Init()
@@ -47,12 +56,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tab_item_dict = {}
 
     @log_exception(True)
-    def saveConfig(self):
+    def save_config(self):
         with open(os.path.join(QDir.currentPath(), "config.ini"), "w", encoding='utf-8') as f:
             self.config.write(f)
 
     @log_exception(True)
-    def loadConfig(self):
+    def load_config(self):
         self.config = configparser.ConfigParser()
         self.config.read(os.path.join(QDir.currentPath(), "config.ini"))
         if self.config.has_option("Config", "Language"):
@@ -60,35 +69,35 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             self.language = ""
             self.config.set("Config", "Language", self.language)
-            self.saveConfig()
-        
+            self.save_config()
+
         if self.config.has_option("Config", "LastOpenDir"):
             self.last_open_dir = self.config.get("Config", "LastOpenDir")
         else:
             self.last_open_dir = ""
             self.config.set("Config", "LastOpenDir", self.last_open_dir)
-            self.saveConfig()
+            self.save_config()
 
         if self.config.has_option("Config", "AutoReplace_LocalizationKey_ParentObjectID"):
             self.auto_replace_key_guid = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
         else:
             self.auto_replace_key_guid = True
             self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
-            self.saveConfig()
+            self.save_config()
 
         if self.config.has_option("Config", "AutoResize"):
             self.autoresize = self.config.getboolean("Config", "AutoResize")
         else:
             self.autoresize = True
             self.config.set("Config", "AutoResize", str(self.autoresize))
-            self.saveConfig()
+            self.save_config()
 
         if self.config.has_option("Config", "AutoCompleteUpdate"):
             DataBase.AutoCompleteUpdate = self.config.getboolean("Config", "AutoCompleteUpdate")
         else:
             DataBase.AutoCompleteUpdate = False
             self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
-            self.saveConfig()
+            self.save_config()
 
     @log_exception(True)
     def loadLanguage(self):
@@ -101,7 +110,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             _app = QApplication.instance()
             _app.removeTranslator(self.trans)
             self.retranslateUi(self)
-
 
     def reset(self):
         self.mod_path = None
@@ -135,9 +143,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
         else:
             self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
-        
+
         width = QtWidgets.qApp.desktop().availableGeometry(self).width()
-        self.splitter.setSizes([int(width * 1/8), int(width * 7/8)])
+        self.splitter.setSizes([int(width * 1 / 8), int(width * 7 / 8)])
         for i in range(self.splitter.count()):
             self.splitter.setCollapsible(i, False)
 
@@ -179,21 +187,21 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.lineEdit.returnPressed.connect(self.on_lineEditReturnPressed)
 
     @log_exception(True)
-    def on_select_Chinese(self, checked: bool=False):
+    def on_select_Chinese(self, checked: bool = False):
         self.language = "zh_CN"
         self.config.set("Config", "Language", self.language)
-        self.saveConfig()
-        self.loadLanguage()
-    
-    @log_exception(True)
-    def on_select_English(self, checked: bool=False):
-        self.language = ""
-        self.config.set("Config", "Language", self.language)
-        self.saveConfig()
+        self.save_config()
         self.loadLanguage()
 
     @log_exception(True)
-    def on_actionResizeMode(self, checked: bool=False):
+    def on_select_English(self, checked: bool = False):
+        self.language = ""
+        self.config.set("Config", "Language", self.language)
+        self.save_config()
+        self.loadLanguage()
+
+    @log_exception(True)
+    def on_actionResizeMode(self, checked: bool = False):
         if self.autoresize:
             self.autoresize = False
             self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
@@ -201,10 +209,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.autoresize = True
             self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
         self.config.set("Config", "AutoResize", str(self.autoresize))
-        self.saveConfig()
+        self.save_config()
 
     @log_exception(True)
-    def on_actionAutoReplace(self, checked: bool=False):
+    def on_actionAutoReplace(self, checked: bool = False):
         if self.auto_replace_key_guid:
             self.auto_replace_key_guid = False
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
@@ -212,10 +220,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.auto_replace_key_guid = True
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
         self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
-        self.saveConfig()
+        self.save_config()
 
     @log_exception(True)
-    def on_actionCompleteUpdate(self, checked: bool=False):
+    def on_actionCompleteUpdate(self, checked: bool = False):
         if DataBase.AutoCompleteUpdate:
             DataBase.AutoCompleteUpdate = False
             self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
@@ -223,31 +231,36 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             DataBase.AutoCompleteUpdate = True
             self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
         self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
-        self.saveConfig()
+        self.save_config()
 
     @log_exception(True)
-    def on_actionAutoTranslationDuplicates(self, checked: bool=False):
+    def on_actionAutoTranslationDuplicates(self, checked: bool = False):
         if self.mod_info:
             DataBase.autoTranslationDuplicates(self.mod_path)
 
     @log_exception(True)
-    def on_actionDeleteObsoleteTranslation(self, checked: bool=False):
+    def on_actionDeleteObsoleteTranslation(self, checked: bool = False):
         if self.mod_info:
-            reply = QMessageBox.question(self, self.tr('Delete Obsolete'), self.tr('Sure you want to remove the outdated translations? (Note that all translations that are not automatically generated by Editor will be considered obsolete)'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            reply = QMessageBox.question(self, self.tr('Delete Obsolete'), self.tr(
+                'Sure you want to remove the outdated translations? (Note that all translations that are not automatically generated by Editor will be considered obsolete)'),
+                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if reply == QMessageBox.Yes:
                 DataBase.deleteObsolete(self.mod_path, self.mod_info["Name"])
 
     @log_exception(True)
-    def on_actionFormatAllLocalizationKey(self, checked: bool=False):
+    def on_actionFormatAllLocalizationKey(self, checked: bool = False):
         if self.mod_info:
-            reply = QMessageBox.question(self, self.tr('Add Prefixes'), self.tr('Sure you want to add Mod prefixes to all LocalizationKeys?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            reply = QMessageBox.question(self, self.tr('Add Prefixes'),
+                                         self.tr('Sure you want to add Mod prefixes to all LocalizationKeys?'),
+                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if reply == QMessageBox.Yes:
                 DataBase.formatAllLocalizationKey(self.mod_path, self.mod_info["Name"])
 
     @log_exception(True)
-    def on_actionJsonDumpWithoutEnsureAscii(self, checked: bool=False):
+    def on_actionJsonDumpWithoutEnsureAscii(self, checked: bool = False):
         if self.mod_info:
-            reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to do it?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            reply = QMessageBox.question(self, self.tr('Warning'), self.tr('Sure you want to do it?'),
+                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
             if reply == QMessageBox.Yes:
                 DataBase.dumpAllJsonFileWithoutEnsureAscii(self.mod_path, self.mod_info["Name"])
 
@@ -296,23 +309,23 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if len(pmenu.actions()):
             pmenu.popup(self.sender().mapToGlobal(pos))
 
-    def on_closeNow(self, tab: int, checked: bool=False):
+    def on_closeNow(self, tab: int, checked: bool = False):
         if tab >= 0:
             self.on_tabWidgetTabCloseRequested(tab, False)
 
-    def on_closeRight(self, tab: int, checked: bool=False):
+    def on_closeRight(self, tab: int, checked: bool = False):
         if tab >= 0:
             for i in reversed(range(tab + 1, self.tabWidget.count())):
                 self.on_tabWidgetTabCloseRequested(i, False)
 
-    def on_closeAllEx(self, tab: int, checked: bool=False):
+    def on_closeAllEx(self, tab: int, checked: bool = False):
         if tab >= 0:
             for i in reversed(range(tab + 1, self.tabWidget.count())):
                 self.on_tabWidgetTabCloseRequested(i, False)
             for i in reversed(range(self.tabWidget.count() - 1)):
                 self.on_tabWidgetTabCloseRequested(i, False)
 
-    def on_closeAll(self, tab: int, checked: bool=False):
+    def on_closeAll(self, tab: int, checked: bool = False):
         if tab >= 0:
             for i in reversed(range(self.tabWidget.count())):
                 self.on_tabWidgetTabCloseRequested(i, False)
@@ -327,9 +340,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.m_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
         self.m_completer.setFilterMode(Qt.MatchFlag.MatchContains)
         self.lineEdit.setCompleter(self.m_completer)
-    
+
     @log_exception(True)
-    def on_pushButtonClicked(self, checked: bool=False):
+    def on_pushButtonClicked(self, checked: bool = False):
         tab_key = self.mod_path + self.lineEdit.text()
         if tab_key in self.tab_item_dict:
             self.tabWidget.setCurrentWidget(self.tab_item_dict[tab_key]["widget"])
@@ -345,14 +358,16 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def on_quick_loadColl(self) -> None:
         DataBase.loadCollection()
-        
+
     def closeEvent(self, event) -> None:
-        reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?(Collection, Localization, Opened files...)'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+        reply = QMessageBox.question(self, self.tr('Save'), self.tr(
+            'Save the changes before exit?(Collection, Localization, Opened files...)'),
+                                     QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
         if reply == QMessageBox.Yes:
             self.on_saveMod()
             event.accept()
         elif reply == QMessageBox.No:
-            event.accept()      
+            event.accept()
         else:
             event.ignore()
 
@@ -417,7 +432,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 pmenu.popup(self.sender().mapToGlobal(pos))
 
     @log_exception(True)
-    def on_newScriptableObject(self, checked: bool=False) -> None:
+    def on_newScriptableObject(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             file_name = self.file_model.fileName(index)
@@ -428,7 +443,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if top_name == "ScriptableObject":
                 group_name = file_name
-                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewData)
+                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
+                                             type=SelectGUI.SelectGUI.NewData)
                 select.exec_()
                 template_key = select.lineEdit.text()
                 try:
@@ -447,7 +463,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 self.init_completer()
 
     @log_exception(True)
-    def on_newCard(self, checked: bool=False) -> None:
+    def on_newCard(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             file_name = self.file_model.fileName(index)
@@ -458,7 +474,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if file_name:
                 group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name= group_name, checked=False, type=SelectGUI.SelectGUI.NewData, auto_replace_key_guid=self.auto_replace_key_guid)
+                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
+                                             type=SelectGUI.SelectGUI.NewData,
+                                             auto_replace_key_guid=self.auto_replace_key_guid)
                 select.exec_()
                 if select.write_flag:
                     template_key = select.lineEdit.text()
@@ -474,19 +492,21 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 temp_json = json.loads(temp_data)
                                 guid = temp_json["UniqueID"]
                                 if select.auto_replace_key_guid and self.auto_replace_key_guid:
-                                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Name"], card_name)
+                                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Name"],
+                                                                             card_name)
                                 temp_data = json.dumps(temp_json, sort_keys=True)
-                                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-",""))
+                                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-", ""))
                                 with open(card_path, "w", encoding='utf-8') as f:
                                     f.write(temp_data)
                             else:
-                                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                                QMessageBox.warning(self, self.tr("Warning"),
+                                                    self.tr('A file with the same name exists'))
                     except Exception as ex:
                         QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
                     self.init_completer()
 
     @log_exception(True)
-    def on_newModify(self, checked: bool=False) -> None:
+    def on_newModify(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             file_name = self.file_model.fileName(index)
@@ -497,7 +517,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             top_name = self.file_model.fileName(top_parent)
             if file_name:
                 group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewModify)
+                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
+                                             type=SelectGUI.SelectGUI.NewModify)
                 select.exec_()
                 if select.write_flag:
                     target_key = select.lineEdit.text()
@@ -514,23 +535,24 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                 if target_key in DataBase.AllGuid[group_key]:
                                     target_group_name = group_key
                                     break
-                            if target_group_name and target_guid:    
+                            if target_group_name and target_guid:
                                 card_dir = file_path + "/" + dir_name
                                 card_path = file_path + "/" + dir_name + "/" + target_guid + ".json"
                                 if not os.path.exists(card_dir):
                                     os.mkdir(card_dir)
-                                if not os.path.exists(card_path):                                    
+                                if not os.path.exists(card_path):
                                     with open(card_path, "w", encoding="utf-8") as f:
                                         f.write("{\n\n}")
                                     self.openTreeViewItem(self.file_model.index(card_path))
                                 else:
-                                    QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                                    QMessageBox.warning(self, self.tr("Warning"),
+                                                        self.tr('A file with the same name exists'))
                     except Exception as ex:
                         QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
                     self.init_completer()
 
     @log_exception(True)
-    def on_delCard(self, checked: bool=False) -> None:
+    def on_delCard(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             file_name = self.file_model.fileName(index)
@@ -539,7 +561,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if top_parent is None:
                 return
             top_name = self.file_model.fileName(top_parent)
-            reply = QMessageBox.question(self, self.tr("Warning"), self.tr('Make sure to delete ') + top_name + ":" + file_name + '?', QMessageBox.Yes | QMessageBox.No , QMessageBox.No)
+            reply = QMessageBox.question(self, self.tr("Warning"),
+                                         self.tr('Make sure to delete ') + top_name + ":" + file_name + '?',
+                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
             if reply == QMessageBox.Yes:
                 if self.file_model.isDir(index):
                     shutil.rmtree(file_path)
@@ -562,11 +586,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         with open(item.tab_key, "w", encoding="utf-8") as f:
             json.dump(save_data, f, sort_keys=True, indent=4, ensure_ascii=False)
         DataBase.loopLoadModSimpCn(save_data, self.mod_info["Name"])
-    
+
     @log_exception(True)
     def on_tabWidgetTabCloseRequested(self, index: int, ask: bool = True):
         if ask:
-            reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?'), QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel , QMessageBox.Yes)
+            reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?'),
+                                         QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
         else:
             reply = QMessageBox.Yes
         item = self.tabWidget.widget(index)
@@ -574,15 +599,15 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if reply == QMessageBox.Yes:
             self.saveTabJsonItem(index)
             del self.tab_item_dict[tab_key]
-            self.tabWidget.removeTab(index)  
+            self.tabWidget.removeTab(index)
         elif reply == QMessageBox.No:
             del self.tab_item_dict[tab_key]
             self.tabWidget.removeTab(index)
         elif reply == QMessageBox.Cancel:
             return
-            
+
     def treeItemDepth(self, index: QModelIndex):
-        depth = 0 
+        depth = 0
         while index.parent().isValid():
             depth += 1
             index = index.parent()
@@ -639,8 +664,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     guid = src_json["UniqueID"]
                 else:
                     guid = ""
-                item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
+                item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key,
+                                                   item_name=file_name[:-5], guid=guid, \
+                                                   auto_resize=self.autoresize,
+                                                   auto_replace_key_guid=self.auto_replace_key_guid,
+                                                   mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
             elif top_name in DataBase.RefGuidList:
                 with open(file_path, 'r', encoding="utf-8") as f:
@@ -649,8 +677,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         guid = data["UniqueID"]
                     else:
                         guid = ""
-                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
+                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5],
+                                       guid=guid, \
+                                       auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid,
+                                       mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             elif top_name == "ScriptableObject":
                 with open(file_path, 'r', encoding="utf-8") as f:
@@ -661,8 +691,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         guid = ""
                 top2nd_parent = self.getDepthParent(index, depth=2)
                 top2nd_name = self.file_model.fileName(top2nd_parent)
-                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5], guid=guid, \
-                    auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid, mod_info=self.mod_info, mod_path=self.mod_path)
+                item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5],
+                                       guid=guid, \
+                                       auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid,
+                                       mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             else:
                 print("openTreeViewItem Unexport Type")
@@ -691,7 +723,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     del json[key]
 
     @log_exception(True)
-    def on_newMod(self, checked: bool=False):
+    def on_newMod(self, checked: bool = False):
         if self.tab_item_dict:
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
@@ -711,7 +743,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.loadMod(QDir.currentPath() + r"/Mods/" + mod_name)
 
     @log_exception(True)
-    def on_saveMod(self, checked: bool=False):
+    def on_saveMod(self, checked: bool = False):
         if self.mod_info:
             for i in range(self.tabWidget.count()):
                 self.saveTabJsonItem(i)
@@ -722,20 +754,22 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             DataBase.LoadModData(self.mod_info["Name"], self.mod_path)
 
     @log_exception(True)
-    def on_exportZip(self, checked: bool=False):
+    def on_exportZip(self, checked: bool = False):
         if self.mod_info:
             self.on_saveMod()
             ExportToZip.exportToZip(self.mod_path, self.mod_info)
-    
+
     @log_exception(True)
-    def on_loadMod(self, checked: bool=False):
+    def on_loadMod(self, checked: bool = False):
         if self.tab_item_dict:
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
         if self.last_open_dir == "":
-            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=QDir.currentPath())
+            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'),
+                                                        directory=QDir.currentPath())
         else:
-            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'), directory=self.last_open_dir)
+            mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'),
+                                                        directory=self.last_open_dir)
         if mod_path is None or mod_path == "":
             return
         if "ModInfo.json" not in os.listdir(mod_path):
@@ -743,7 +777,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             return
         self.last_open_dir = str(Path(mod_path).parent.absolute())
         self.config.set("Config", "LastOpenDir", self.last_open_dir)
-        self.saveConfig()
+        self.save_config()
         self.loadMod(mod_path)
 
     def loadMod(self, mod_path):
@@ -773,6 +807,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         self.setWindowTitle("%s (%s)" % (self.srcTitle, self.mod_info["Name"] + "-" + self.mod_info["Version"]))
         self.init_completer()
+
 
 if __name__ == '__main__':
     QTextCodec.setCodecForLocale(QTextCodec.codecForName("UTF-8"))

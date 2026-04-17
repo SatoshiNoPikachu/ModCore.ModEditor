@@ -10,7 +10,8 @@ import traceback
 logFile = None
 logStream = None
 
-def log_exception(MsgBox: bool=False):
+
+def log_exception(MsgBox: bool = False):
     def decorator(func):
         def inner_function(*args, **kwargs):
             try:
@@ -20,8 +21,11 @@ def log_exception(MsgBox: bool=False):
                 if MsgBox:
                     QMessageBox.warning(None, "Warning", msg, QMessageBox.Yes, QMessageBox.Yes)
                 QtCore.qWarning(bytes(msg, encoding="utf-8"))
+
         return inner_function
+
     return decorator
+
 
 def qt_message_handler(mode, context, message):
     global logFile, logStream
@@ -35,7 +39,7 @@ def qt_message_handler(mode, context, message):
         mode = 'FATAL'
     else:
         mode = 'DEBUG'
-    
+
     if logFile is not None and logStream is not None:
         logStream << 'line: %d, func: %s(), file: %s\n' % (context.line, context.function, context.file)
         logStream << '  %s: %s\n' % (mode, message)
@@ -46,6 +50,7 @@ def qt_message_handler(mode, context, message):
         print('line: %d, func: %s(), file: %s' % (
             context.line, context.function, context.file))
         print('  %s: %s\n' % (mode, message))
+
 
 def logInit(log_path: str):
     global logFile, logStream

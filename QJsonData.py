@@ -16,6 +16,7 @@ pattern_no_empty_string = "': '[^']"
 pattern_negative = ''': -'''
 pattern_FileID = '''m_FileID'''
 
+
 class QJsonTreeItem(object):
     def __init__(self, parent=None):
         self.mParent = parent
@@ -32,10 +33,10 @@ class QJsonTreeItem(object):
     def appendChild(self, key, item):
         self.mChilds[key] = item
 
-    def child(self, row:int):
+    def child(self, row: int):
         return self.mChilds[list(self.mChilds.keys())[row]]
 
-    def childByKey(self, key:str):
+    def childByKey(self, key: str):
         if key in self.mChilds:
             return self.mChilds[key]
         return None
@@ -46,7 +47,7 @@ class QJsonTreeItem(object):
         except Exception as ex:
             return None
 
-    def newItem(parent, mKey = None, mType = None, mValue = None, mField = None, mVaild = False):
+    def newItem(parent, mKey=None, mType=None, mValue=None, mField=None, mVaild=False):
         item = QJsonTreeItem(parent)
         if parent is None:
             item.setDepth(0)
@@ -68,7 +69,7 @@ class QJsonTreeItem(object):
         parentItem = self.mParent
         while True:
             if parentItem is None:
-                return None 
+                return None
             if parentItem.depth() == depth:
                 return parentItem
             parentItem = parentItem.mParent
@@ -86,10 +87,10 @@ class QJsonTreeItem(object):
             return list(self.mParent.mChilds.keys()).index(self.mKey)
         return 0
 
-    def setKey(self, key:str):
+    def setKey(self, key: str):
         self.mKey = key
 
-    def setValue(self, value:str):
+    def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
             if value == "True":
                 self.mValue = True
@@ -102,25 +103,25 @@ class QJsonTreeItem(object):
         else:
             self.mValue = value
 
-    def setField(self, value:str):
-       self.mField = value
+    def setField(self, value: str):
+        self.mField = value
 
-    def setVaild(self, value:bool):
-       self.mVaild = value
+    def setVaild(self, value: bool):
+        self.mVaild = value
 
-    def setDepth(self, value:int):
-       self.mDepth = value
-    
-    def setNote(self, value:str):
+    def setDepth(self, value: int):
+        self.mDepth = value
+
+    def setNote(self, value: str):
         self.mNote = value
 
-    def setCustomNote(self, value:str):
+    def setCustomNote(self, value: str):
         self.mCustomNote = value
 
-    def setStatus(self, value:str):
+    def setStatus(self, value: str):
         self.mStatus = value
 
-    def setType(self, type:QJsonValue.Type):
+    def setType(self, type: QJsonValue.Type):
         if type == QJsonValue.Type.Array or type == list:
             self.mType = "list"
         elif type == QJsonValue.Type.Bool or type == bool:
@@ -159,11 +160,11 @@ class QJsonTreeItem(object):
 
     def customNote(self):
         return self.mCustomNote
-    
+
     def status(self):
         return self.mStatus
 
-    def load(value, itemField = "", parent = None, itemKey = None):
+    def load(value, itemField="", parent=None, itemKey=None):
         rootItem = QJsonTreeItem(parent)
         if itemKey is None:
             rootItem.setKey("root")
@@ -172,7 +173,7 @@ class QJsonTreeItem(object):
 
         if itemField in DataBase.AllTypeField or itemField in DataBase.AllEnum:
             rootItem.setField(itemField)
-            
+
         jsonType = None
         if parent is None:
             rootItem.setDepth(0)
@@ -241,7 +242,8 @@ class QJsonTreeItem(object):
                         if itemField in DataBase.AllNotes:
                             if key in DataBase.AllNotes[itemField]:
                                 child.setNote(DataBase.AllNotes[itemField][key])
-                    elif key.endswith("WarpData") and key[:-8] + "WarpType" in value and (value[key[:-8] + "WarpType"] == 4 or value[key[:-8] + "WarpType"] == 5):
+                    elif key.endswith("WarpData") and key[:-8] + "WarpType" in value and (
+                            value[key[:-8] + "WarpType"] == 4 or value[key[:-8] + "WarpType"] == 5):
                         if key[:-8] in DataBase.AllTypeField[itemField]:
                             child = QJsonTreeItem.load(v, DataBase.AllTypeField[itemField][key[:-8]], rootItem, key)
                         else:
@@ -251,8 +253,8 @@ class QJsonTreeItem(object):
                         child = QJsonTreeItem.load(v, "", rootItem, key)
                         child.setStatus("Deprecated")
                 else:
-                    child = QJsonTreeItem.load(v, "", rootItem, key)           
-                    child.setStatus("Deprecated")    
+                    child = QJsonTreeItem.load(v, "", rootItem, key)
+                    child.setStatus("Deprecated")
                 child.setKey(key)
                 try:
                     child.setType(v.type())
@@ -261,8 +263,9 @@ class QJsonTreeItem(object):
                 rootItem.appendChild(key, child)
 
             if DataBase.AutoCompleteUpdate:
-                if (itemField in DataBase.AllTypeField and itemField not in DataBase.RefGuidList and itemField not in DataBase.RefNameList) or \
-                    (itemField in DataBase.AllTypeField and parent is None):
+                if (
+                        itemField in DataBase.AllTypeField and itemField not in DataBase.RefGuidList and itemField not in DataBase.RefNameList) or \
+                        (itemField in DataBase.AllTypeField and parent is None):
                     missing_list = [k for k in DataBase.AllTypeField[itemField].keys() if k not in value.keys()]
                     for key in missing_list:
                         keyField = DataBase.AllTypeField[itemField][key]
@@ -272,45 +275,46 @@ class QJsonTreeItem(object):
                                     child = QJsonTreeItem.load([], keyField, rootItem, key)
                                 else:
                                     child = QJsonTreeItem.load({}, keyField, rootItem, key)
-                                child.setStatus("Missing") 
+                                child.setStatus("Missing")
                                 rootItem.appendChild(key, child)
                         elif keyField == "SpecialWarp":
                             pass
                         elif keyField in DataBase.AllEnum:
-                            child = QJsonTreeItem.load(0, keyField, rootItem, key)           
-                            child.setStatus("Missing") 
-                            child.setField(keyField) 
+                            child = QJsonTreeItem.load(0, keyField, rootItem, key)
+                            child.setStatus("Missing")
+                            child.setField(keyField)
                             rootItem.appendChild(key, child)
-                        elif keyField in DataBase.AllBaseJsonData and itemField in DataBase.AllBaseJsonData and key in DataBase.AllBaseJsonData[itemField]:
+                        elif keyField in DataBase.AllBaseJsonData and itemField in DataBase.AllBaseJsonData and key in \
+                                DataBase.AllBaseJsonData[itemField]:
                             if type(DataBase.AllBaseJsonData[itemField][key]) == list:
-                                child = QJsonTreeItem.load([], keyField, rootItem, key)    
+                                child = QJsonTreeItem.load([], keyField, rootItem, key)
                             else:
-                                child = QJsonTreeItem.load(DataBase.AllBaseJsonData[keyField], keyField, rootItem, key)           
-                            child.setStatus("Missing") 
+                                child = QJsonTreeItem.load(DataBase.AllBaseJsonData[keyField], keyField, rootItem, key)
+                            child.setStatus("Missing")
                             rootItem.appendChild(key, child)
                         elif keyField == "Boolean":
-                            child = QJsonTreeItem.load(False, keyField, rootItem, key)           
-                            child.setStatus("Missing") 
-                            child.setField(keyField) 
+                            child = QJsonTreeItem.load(False, keyField, rootItem, key)
+                            child.setStatus("Missing")
+                            child.setField(keyField)
                             rootItem.appendChild(key, child)
                         elif keyField == "Int32":
-                            child = QJsonTreeItem.load(0, keyField, rootItem, key)           
-                            child.setStatus("Missing") 
-                            child.setField(keyField) 
+                            child = QJsonTreeItem.load(0, keyField, rootItem, key)
+                            child.setStatus("Missing")
+                            child.setField(keyField)
                             rootItem.appendChild(key, child)
                         elif keyField == "Single":
-                            child = QJsonTreeItem.load(0.0, keyField, rootItem, key)           
+                            child = QJsonTreeItem.load(0.0, keyField, rootItem, key)
                             child.setStatus("Missing")
-                            child.setField(keyField)  
+                            child.setField(keyField)
                             rootItem.appendChild(key, child)
                         elif keyField == "String":
-                            child = QJsonTreeItem.load("", keyField, rootItem, key)           
-                            child.setStatus("Missing") 
-                            child.setField(keyField) 
+                            child = QJsonTreeItem.load("", keyField, rootItem, key)
+                            child.setStatus("Missing")
+                            child.setField(keyField)
                             rootItem.appendChild(key, child)
                         else:
-                            child = QJsonTreeItem.load("", "None", rootItem, key)           
-                            child.setStatus("Missing") 
+                            child = QJsonTreeItem.load("", "None", rootItem, key)
+                            child.setStatus("Missing")
                             rootItem.appendChild(key, child)
         elif isinstance(value, list):
             rootItem.setType(list)
@@ -333,7 +337,7 @@ class QJsonTreeItem(object):
                 rootItem.setVaild(True)
             else:
                 rootItem.setVaild(False)
-                
+
             # value is processed
             rootItem.setValue(value)
             try:
@@ -359,6 +363,7 @@ class QJsonTreeItem(object):
         #     rootItem.mChilds = {k: v for k, v in sorted(rootItem.mChilds.items(), key=lambda item: item[1].mVaild, reverse=True)}
         return rootItem
 
+
 class reversor:
     def __init__(self, obj):
         self.obj = obj
@@ -367,10 +372,11 @@ class reversor:
         return other.obj == self.obj
 
     def __lt__(self, other):
-           return other.obj < self.obj
+        return other.obj < self.obj
+
 
 class QJsonProxyModel(QSortFilterProxyModel):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(QJsonProxyModel, self).__init__(parent)
         self.vaildFilter = QRegExp("True")
         self.keyFilter = QRegExp("")
@@ -403,15 +409,16 @@ class QJsonProxyModel(QSortFilterProxyModel):
         self.keyFilter.setPattern(match)
         self.invalidateFilter()
 
+
 class QJsonModel(QAbstractItemModel):
-    def __init__(self, root_field, parent = None, is_modify = False):
+    def __init__(self, root_field, parent=None, is_modify=False):
         super().__init__(parent)
         self.mRootItem = QJsonTreeItem()
         self.mHeaders = ["key", "value", "field", "type", "vaild", "note", "custom note", "status"]
         self.root_field = root_field
         self.is_modify = is_modify
 
-    def loadJson(self, json_data:dict):
+    def loadJson(self, json_data: dict):
         # error = QJsonParseError()
         # self.mDocument = QJsonDocument.fromJson(json, error)
         if json_data is not None:
@@ -556,14 +563,15 @@ class QJsonModel(QAbstractItemModel):
                     self.deleteChildItem(srcIndex, key + "WarpData")
                     item.setVaild(False)
 
-    def addAddRefWarp(self, index: QModelIndex, value: str = "", key: str = None, field: str = None, brother: bool = True):
+    def addAddRefWarp(self, index: QModelIndex, value: str = "", key: str = None, field: str = None,
+                      brother: bool = True):
         if index.isValid():
             model = index.model()
             if hasattr(model, 'mapToSource'):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
-            
+
             if key is None:
                 key = item.key()
 
@@ -574,7 +582,7 @@ class QJsonModel(QAbstractItemModel):
                 if brother:
                     warpTypeItem = item.brother(key + "WarpType")
                     warpDataItem = item.brother(key + "WarpData")
-                    
+
                     if warpTypeItem is None:
                         self.addBrother(srcIndex, key + "WarpType", int, 6, "WarpType", True)
                     else:
@@ -591,7 +599,7 @@ class QJsonModel(QAbstractItemModel):
                 else:
                     warpTypeItem = item.childByKey(key + "WarpType")
                     warpDataItem = item.childByKey(key + "WarpData")
-                    
+
                     if warpTypeItem is None:
                         self.addItem(srcIndex, key + "WarpType", int, 6, "WarpType", True)
                     else:
@@ -613,7 +621,7 @@ class QJsonModel(QAbstractItemModel):
                 srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
-            
+
             if srcItem is None:
                 key = item.key()
                 field = "WarpModify"
@@ -626,7 +634,7 @@ class QJsonModel(QAbstractItemModel):
             if brother:
                 warpTypeItem = item.brother(key + "WarpType")
                 warpDataItem = item.brother(key + "WarpData")
-                
+
                 if warpTypeItem is None:
                     self.addBrother(srcIndex, key + "WarpType", int, 4, "WarpType", True)
                 else:
@@ -640,7 +648,7 @@ class QJsonModel(QAbstractItemModel):
             else:
                 warpTypeItem = item.childByKey(key + "WarpType")
                 warpDataItem = item.childByKey(key + "WarpData")
-                
+
                 if warpTypeItem is None:
                     self.addItem(srcIndex, key + "WarpType", int, 4, "WarpType", True)
                 else:
@@ -672,7 +680,7 @@ class QJsonModel(QAbstractItemModel):
             if brother:
                 warpTypeItem = item.brother(key + "WarpType")
                 warpDataItem = item.brother(key + "WarpData")
-                
+
                 if warpTypeItem is None:
                     self.addBrother(srcIndex, key + "WarpType", int, 5, "WarpType", True)
                 else:
@@ -686,7 +694,7 @@ class QJsonModel(QAbstractItemModel):
             else:
                 warpTypeItem = item.childByKey(key + "WarpType")
                 warpDataItem = item.childByKey(key + "WarpData")
-                
+
                 if warpTypeItem is None:
                     self.addItem(srcIndex, key + "WarpType", int, 5, "WarpType", True)
                 else:
@@ -817,7 +825,8 @@ class QJsonModel(QAbstractItemModel):
                     return Qt.ItemFlag.NoItemFlags
                 if item.key() == "UniqueID":
                     return Qt.ItemFlag.ItemIsEnabled
-                if item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith("WarpType") or item.key().endswith("WarpData"):
+                if item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith(
+                        "WarpType") or item.key().endswith("WarpData"):
                     return Qt.ItemFlag.NoItemFlags
                 if item.type() == "list":
                     return Qt.ItemFlag.NoItemFlags
@@ -834,12 +843,13 @@ class QJsonModel(QAbstractItemModel):
             item = index.internalPointer()
             if item.key() == "UniqueID":
                 return Qt.ItemFlag.ItemIsEnabled
-            if item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith("WarpType") or item.key().endswith("WarpData"):
+            if item.key() == "m_FileID" or item.key() == "m_PathID" or item.key().endswith(
+                    "WarpType") or item.key().endswith("WarpData"):
                 return Qt.ItemFlag.NoItemFlags
             if item.type() == "list":
                 return Qt.ItemFlag.NoItemFlags
             if item.field() in DataBase.AllEnum:
-                return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled 
+                return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
             if item.field() != "Boolean" and item.field() != "Int32" and item.field() != "Single" and item.field() != "String":
                 return Qt.ItemFlag.NoItemFlags
             return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled
@@ -916,12 +926,12 @@ class QJsonModel(QAbstractItemModel):
             parentItem = self.mRootItem
         else:
             parentItem = parent.internalPointer()
-            
+
         # try:
         childItem = parentItem.child(row)
         return self.createIndex(row, column, childItem)
         # except IndexError:
-            # return QModelIndex()
+        # return QModelIndex()
 
     def parent(self, index: QModelIndex):
         if not index.isValid():
@@ -972,7 +982,7 @@ class QJsonModel(QAbstractItemModel):
     #     if row < 0 or count < 1 or row > self.rowCount():
     #         return
     #     self.beginInsertRows(parent, row, row + count - 1)
-        
+
     #     self.endInsertRows()
     #     return True
 

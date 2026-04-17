@@ -8,6 +8,7 @@ from Ui_Select import *
 from Ui_Collection import *
 from DataBase import *
 
+
 class SelectGUI(QDialog, Ui_Select):
     Ref = 0
     NewData = 1
@@ -16,7 +17,8 @@ class SelectGUI(QDialog, Ui_Select):
     Special = 4
     NewModify = 5
 
-    def __init__(self, parent=None, field_name:str="", checked:bool=False, type:int=0, auto_replace_key_guid:bool=False):
+    def __init__(self, parent=None, field_name: str = "", checked: bool = False, type: int = 0,
+                 auto_replace_key_guid: bool = False):
         super(SelectGUI, self).__init__(parent)
         self.setupUi(self)
         self.field_name = field_name
@@ -32,9 +34,11 @@ class SelectGUI(QDialog, Ui_Select):
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
             if not self.auto_replace_key_guid:
-                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(self.tr("Auto Replace LocalizationKey"))
+                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(
+                    self.tr("Auto Replace LocalizationKey"))
             else:
-                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(self.tr("No Replace LocalizationKey"))
+                self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(
+                    self.tr("No Replace LocalizationKey"))
 
         if type == SelectGUI.NewModify:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
@@ -142,7 +146,7 @@ class SelectGUI(QDialog, Ui_Select):
                 self.m_completer = QCompleter(DataBase.AllRef["ContentDisplayer"], self)
             else:
                 self.m_completer = QCompleter([], self)
-            
+
             self.m_completer.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
             self.m_completer.setFilterMode(Qt.MatchFlag.MatchContains)
             self.m_completer.activated[str].connect(self.on_Choosed)

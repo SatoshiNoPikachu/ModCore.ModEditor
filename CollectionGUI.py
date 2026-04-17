@@ -7,8 +7,9 @@ from PyQt5.QtWidgets import *
 from Ui_Collection import *
 from DataBase import *
 
+
 class CollectionGUI(QDialog, Ui_Collection):
-    def __init__(self, field, database, parent = None):
+    def __init__(self, field, database, parent=None):
         super(CollectionGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
@@ -18,7 +19,7 @@ class CollectionGUI(QDialog, Ui_Collection):
         self.listWidget.addItems(list(self.database[field].keys()))
         self.listWidget.setSortingEnabled(True)
         self.listWidget.setDragEnabled(True)
-        
+
         self.listWidget.itemClicked.connect(self.on_listWidgetItemClicked)
 
         self.listWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -51,7 +52,7 @@ class CollectionGUI(QDialog, Ui_Collection):
             menu.popup(self.sender().mapToGlobal(pos))
 
     @log_exception(True)
-    def on_delItem(self, checked: bool=False):
+    def on_delItem(self, checked: bool = False):
         item = self.listWidget.currentItem()
         self.listWidget.takeItem(self.listWidget.row(item))
         self.m_completer.setModel(self.listWidget.model())

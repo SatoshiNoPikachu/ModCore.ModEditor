@@ -7,8 +7,9 @@ from PyQt5.QtWidgets import *
 from DataBase import *
 from SelectGUI import *
 
+
 class ItemDelegate(QItemDelegate):
-    def __init__(self, field = "", parent = None):
+    def __init__(self, field="", parent=None):
         super(ItemDelegate, self).__init__(parent)
         self.field = field
 
@@ -49,8 +50,9 @@ class ItemDelegate(QItemDelegate):
         editor.setValidator(QDoubleValidator(editor))
         return editor
 
-    def createSelectEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QModelIndex, field_name = "", type = SelectGUI.Ref) -> QWidget:
-        editor = SelectGUI(parent, field_name = field_name, type = type)
+    def createSelectEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QModelIndex, field_name="",
+                           type=SelectGUI.Ref) -> QWidget:
+        editor = SelectGUI(parent, field_name=field_name, type=type)
         return editor
 
     def setEditorData(self, editor: QWidget, index: QModelIndex) -> None:
@@ -90,9 +92,9 @@ class ItemDelegate(QItemDelegate):
             srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
         else:
             srcModel, item, srcIndex = model, index.internalPointer(), index
-            
+
         if item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
-            pass 
+            pass
         elif item.field() in DataBase.AllEnum:
             if editor.write_flag:
                 if editor.lineEdit.text() in DataBase.AllEnum[item.field()]:
@@ -104,8 +106,9 @@ class ItemDelegate(QItemDelegate):
     #     editor.setGeometry(option.rect)
     #     return super().updateEditorGeometry(editor, option, index)
 
+
 class EnableDelegate(QItemDelegate):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super(EnableDelegate, self).__init__(parent)
 
     def createEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QModelIndex) -> QWidget:

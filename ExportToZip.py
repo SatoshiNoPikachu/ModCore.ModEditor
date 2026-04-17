@@ -14,6 +14,7 @@ pattern_no_empty_string = "': '[^']"
 pattern_negative = ''': -'''
 pattern_FileID = '''m_FileID'''
 
+
 def exportToZip(dir: str, mod_info: dict):
     try:
         temp_dir = dir + "_temp~"
@@ -29,7 +30,8 @@ def exportToZip(dir: str, mod_info: dict):
                         toJsonMinimalism(json_data)
                     with open(file, "w", encoding="utf-8") as f:
                         json.dump(json_data, f, ensure_ascii=False)
-            zipname = os.path.split(temp_dir)[0] + "/%s-%s-ModLoader%s" % (mod_info["Name"], mod_info["Version"], mod_info["ModLoaderVerison"])
+            zipname = os.path.split(temp_dir)[0] + "/%s-%s-ModLoader%s" % (
+            mod_info["Name"], mod_info["Version"], mod_info["ModLoaderVerison"])
             shutil.make_archive(zipname, 'zip', temp_dir)
             shutil.rmtree(temp_dir)
     except Exception as ex:
@@ -37,13 +39,14 @@ def exportToZip(dir: str, mod_info: dict):
             shutil.rmtree(temp_dir)
         print(traceback.format_exc())
 
+
 def toJsonMinimalism(json_data):
     if type(json_data) == dict:
-        for key in list(json_data.keys()): 
+        for key in list(json_data.keys()):
             if type(json_data[key]) == dict:
                 toJsonMinimalism(json_data[key])
             elif type(json_data[key]) == list:
-                for i in  reversed(range(len(json_data[key]))):
+                for i in reversed(range(len(json_data[key]))):
                     if type(json_data[key][i]) == dict:
                         toJsonMinimalism(json_data[key][i])
             else:
