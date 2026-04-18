@@ -33,7 +33,7 @@ class Ui_Select(object):
         self.horizontalLayout_CheckBox = QtWidgets.QHBoxLayout()
         self.horizontalLayout_CheckBox.setObjectName("horizontalLayout_CheckBox")
         self.verticalLayout.addLayout(self.horizontalLayout_CheckBox)
-        self.horizontalLayout_CheckBox2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_CheckBox2 = QtWidgets.QGridLayout()
         self.horizontalLayout_CheckBox2.setObjectName("horizontalLayout_CheckBox2")
         self.verticalLayout.addLayout(self.horizontalLayout_CheckBox2)
         self.buttonBox = QtWidgets.QDialogButtonBox(Select)

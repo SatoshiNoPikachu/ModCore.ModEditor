@@ -1,4 +1,6 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+
+from pathlib import Path
 import ujson as json
 import sys
 import os
@@ -50,7 +52,7 @@ class DataBase(object):
     RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
                    "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
     SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject"]
+                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject", "DataObjectModify"]
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -149,91 +151,108 @@ class DataBase(object):
 
         DataBase.AllModSimpCn = {}
 
-        for dir in os.listdir(mod_dir):
-            if os.path.isdir(mod_dir + r"/" + dir):
-                if dir in DataBase.RefGuidList:
-                    for file in [y for x in os.walk(mod_dir + r"/" + dir) for y in glob(os.path.join(x[0], '*.json'))]:
-                        file_name = os.path.basename(file)
-                        guid = None
-                        with open(file, "rb") as f:
-                            data = f.read(-1)
-                            guid_idx = data.find(b'"UniqueID"')
-                            if guid_idx == -1:
-                                continue
-                            start_mark = data.find(b'"', guid_idx + len('"UniqueID"'))
-                            if start_mark == -1:
-                                continue
-                            end_mark = data.find(b'"', start_mark + 1)
-                            if end_mark == -1:
-                                continue
-                            guid = data[start_mark + 1:end_mark].decode()
-                        if guid is None or guid == "":
+        path_mod = Path(mod_dir)
+        path_root = path_mod.parent
+
+        path_res = path_root / "Resource"
+        if path_res.exists() and path_res.is_dir():
+            path_tex = path_res / "Texture2D"
+            path_audio = path_res / "Audio"
+
+            ext_tex = {".png", ".jpg", ".jpeg"}
+            ext_audio = {".wav"}
+
+            if path_tex.exists() and path_tex.is_dir():
+                for file in path_tex.rglob('*'):
+                    if file.suffix.lower() in ext_tex:
+                        DataBase.AllRef["Sprite"].append(file.stem)
+
+            if path_audio.exists() and path_audio.is_dir():
+                for file in path_audio.iterdir():
+                    if file.suffix.lower() in ext_audio:
+                        DataBase.AllRef["AudioClip"].append(file.stem)
+
+        path_lz = path_root / "Localization/SimpCn.csv"
+        if path_lz.exists() and path_lz.is_file():
+            with path_lz.open("r", encoding='utf-8') as f:
+                lines = f.readlines(-1)
+                for line in lines:
+                    keys = line.split(',')
+                    if len(keys) > 3:
+                        if line.find('"') != -1:
+                            new_keys = line.split('"')
+                            if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
+                                DataBase.AllModSimpCn[new_keys[0][:-1]] = {
+                                    "original": new_keys[1].replace('"', ''),
+                                    "translate": new_keys[2][1:].replace("\n", "")}
+                    elif len(keys) == 3:
+                        DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
+                                                          "translate": keys[2].replace("\n", "")}
+                    else:
+                        QtCore.qWarning(b"Wrong Format Key")
+
+        for p in path_mod.iterdir():
+            if not p.is_dir():
+                continue
+
+            p = p.name
+
+            if p in DataBase.RefGuidList:
+                for file in [y for x in os.walk(mod_dir + r"/" + p) for y in glob(os.path.join(x[0], '*.json'))]:
+                    file_name = os.path.basename(file)
+                    guid = None
+                    with open(file, "rb") as f:
+                        data = f.read(-1)
+                        guid_idx = data.find(b'"UniqueID"')
+                        if guid_idx == -1:
                             continue
-                        ref = mod_name + "_" + file_name[:-5]
-                        if dir == "CardData":
-                            DataBase.AllRef[dir]["Mod"].append(ref)
-                            DataBase.AllGuid[dir].update({ref: guid})
-                            DataBase.AllGuidPlain.update({ref: guid})
-                            DataBase.AllCardData.update({ref: guid})
-                            DataBase.AllPath[dir].update({ref: file})
-                            DataBase.AllScriptableObject.update({ref: guid})
-                        else:
-                            DataBase.AllRef[dir].append(ref)
-                            DataBase.AllGuid[dir].update({ref: guid})
-                            DataBase.AllGuidPlain.update({ref: guid})
-                            DataBase.AllPath[dir].update({ref: file})
-                            DataBase.AllScriptableObject.update({ref: guid})
-                elif dir == "GameSourceModify":
-                    pass
-                elif dir == "ScriptableObject":
-                    for sub_dir in os.listdir(mod_dir + r"/" + dir):
-                        for file in [y for x in os.walk(mod_dir + r"/" + dir + r"/" + sub_dir) for y in
-                                     glob(os.path.join(x[0], '*.json'))]:
-                            file_name = os.path.basename(file)
-                            if sub_dir == "ContentPage":
-                                if file_name.endswith("Default.json"):
-                                    name_parts = file_name.split("_")
-                                    if len(name_parts) > 2:
-                                        DataBase.AllRef["ContentDisplayer"].append(name_parts[0] + "_" + name_parts[1])
-                            if file.endswith(".json"):
-                                ref = file_name[:-5]
-                                DataBase.AllRef[sub_dir].append(file_name[:-5])
-                                DataBase.AllPath[sub_dir].update({ref: file})
-                                DataBase.AllScriptableObject.update({ref: ref})
-                elif dir == "Localization":
-                    if os.path.exists(mod_dir + r"/" + dir + r"/SimpCn.csv"):
-                        with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
-                            lines = f.readlines(-1)
-                            for line in lines:
-                                keys = line.split(',')
-                                if len(keys) > 3:
-                                    if line.find('"') != -1:
-                                        new_keys = line.split('"')
-                                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                                            DataBase.AllModSimpCn[new_keys[0][:-1]] = {
-                                                "original": new_keys[1].replace('"', ''),
-                                                "translate": new_keys[2][1:].replace("\n", "")}
-                                elif len(keys) == 3:
-                                    DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
-                                                                      "translate": keys[2].replace("\n", "")}
-                                else:
-                                    QtCore.qWarning(b"Wrong Format Key")
-                elif dir == "Resource":
-                    if os.path.exists(mod_dir + r"/" + dir + r"/Picture"):
-                        for file in os.listdir(mod_dir + r"/" + dir + r"/Picture"):
-                            if file.endswith(".jpg") or file.endswith(".png"):
-                                DataBase.AllRef["Sprite"].append(file[:-4])
-                            if file.endswith(".jpeg"):
-                                DataBase.AllRef["Sprite"].append(file[:-5])
-                    if os.path.exists(mod_dir + r"/" + dir + r"/Audio"):
-                        for file in os.listdir(mod_dir + r"/" + dir + r"/Audio"):
-                            if file.endswith(".wav"):
-                                DataBase.AllRef["AudioClip"].append(file[:-4])
+                        start_mark = data.find(b'"', guid_idx + len('"UniqueID"'))
+                        if start_mark == -1:
+                            continue
+                        end_mark = data.find(b'"', start_mark + 1)
+                        if end_mark == -1:
+                            continue
+                        guid = data[start_mark + 1:end_mark].decode()
+                    if guid is None or guid == "":
+                        continue
+                    ref = mod_name + "_" + file_name[:-5]
+                    if p == "CardData":
+                        print(file)
+                        DataBase.AllRef[p]["Mod"].append(ref)
+                        DataBase.AllGuid[p].update({ref: guid})
+                        DataBase.AllGuidPlain.update({ref: guid})
+                        DataBase.AllCardData.update({ref: guid})
+                        DataBase.AllPath[p].update({ref: file})
+                        DataBase.AllScriptableObject.update({ref: guid})
+                    else:
+                        DataBase.AllRef[p].append(ref)
+                        DataBase.AllGuid[p].update({ref: guid})
+                        DataBase.AllGuidPlain.update({ref: guid})
+                        DataBase.AllPath[p].update({ref: file})
+                        DataBase.AllScriptableObject.update({ref: guid})
+            # elif p == "GameSourceModify":
+            #     pass
+            elif p == "ScriptableObject":
+                for sub_dir in os.listdir(mod_dir + r"/" + p):
+                    for file in [y for x in os.walk(mod_dir + r"/" + p + r"/" + sub_dir) for y in
+                                 glob(os.path.join(x[0], '*.json'))]:
+                        file_name = os.path.basename(file)
+                        if sub_dir == "ContentPage":
+                            if file_name.endswith("Default.json"):
+                                name_parts = file_name.split("_")
+                                if len(name_parts) > 2:
+                                    DataBase.AllRef["ContentDisplayer"].append(name_parts[0] + "_" + name_parts[1])
+                        if file.endswith(".json"):
+                            ref = file_name[:-5]
+                            DataBase.AllRef[sub_dir].append(file_name[:-5])
+                            DataBase.AllPath[sub_dir].update({ref: file})
+                            DataBase.AllScriptableObject.update({ref: ref})
 
         for key in DataBase.AllPath:
             DataBase.AllPathPlain.update(copy.deepcopy(DataBase.AllPath[key]))
 
         DataBase.AllGuidPlainRev = {v: k for k, v in DataBase.AllGuidPlain.items()}
+        pass
 
     @staticmethod
     def loadName():
@@ -490,6 +509,10 @@ class DataBase(object):
 
     @staticmethod
     def loadModSimpCn(mod_dir):
+        p = Path(mod_dir)
+        if p.name == "Data":
+            mod_dir = str(p.parent)
+
         for dir in os.listdir(mod_dir):
             if os.path.isdir(mod_dir + r"/" + dir) and dir == "Localization" and os.path.exists(
                     mod_dir + r"/" + dir + r"/SimpCn.csv"):
@@ -601,6 +624,10 @@ class DataBase(object):
 
     @staticmethod
     def saveModSimpCn(mod_dir, loadSrc: bool = True):
+        p = Path(mod_dir)
+        if p.name == "Data":
+            mod_dir = str(p.parent)
+
         if loadSrc:
             DataBase.loadModSimpCn(mod_dir)
         with open(mod_dir + r"/Localization/SimpCn.csv", "w", encoding='utf-8') as f:

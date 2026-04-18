@@ -45,8 +45,11 @@
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_CheckBox"/>
      </item>
+<!--     <item>-->
+<!--      <layout class="QHBoxLayout" name="horizontalLayout_CheckBox2"/>-->
+<!--     </item>-->
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_CheckBox2"/>
+      <layout class="QGridLayout" name="horizontalLayout_CheckBox2"/>
      </item>
      <item>
       <widget class="QDialogButtonBox" name="buttonBox">

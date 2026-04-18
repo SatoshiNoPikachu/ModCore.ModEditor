@@ -26,6 +26,7 @@ class SelectGUI(QDialog, Ui_Select):
         self.auto_replace_key_guid = auto_replace_key_guid
         self.modify_type = None
         self.setWindowTitle(self.tr("Add ") + field_name + self.tr(" Reference Type"))
+        self.checked_type = None
 
         if type == SelectGUI.NewData:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Template"))
@@ -58,45 +59,71 @@ class SelectGUI(QDialog, Ui_Select):
 
         try:
             if self.field_name == "CardData":
-                reflist = []
+                ref_list = []
                 self.checkBoxList = {}
                 for key in DataBase.AllRef[self.field_name].keys():
-                    checkBox = QCheckBox()
-                    checkBox.setText(key)
+                    check_box = QCheckBox()
+                    check_box.setText(key)
                     if checked:
-                        checkBox.setChecked(True)
-                    checkBox.stateChanged.connect(self.on_CardDataCheckBoxStateChanged)
-                    self.checkBoxList[key] = checkBox
+                        check_box.setChecked(True)
+                    check_box.stateChanged.connect(self.on_CardDataCheckBoxStateChanged)
+                    self.checkBoxList[key] = check_box
                     self.comboBox.addItems(DataBase.AllRef[self.field_name][key])
-                    reflist.extend(DataBase.AllRef[self.field_name][key])
-                    self.horizontalLayout_CheckBox.addWidget(checkBox)
-                self.m_completer = QCompleter(reflist, self)
+                    ref_list.extend(DataBase.AllRef[self.field_name][key])
+                    self.horizontalLayout_CheckBox.addWidget(check_box)
+                self.m_completer = QCompleter(ref_list, self)
+
             elif self.field_name == "GameSourceModify":
-                reflist = []
+                ref_list = []
                 self.checkBoxList = {}
                 for key in DataBase.AllRef["CardData"].keys():
-                    checkBox = QCheckBox()
-                    checkBox.setText(key)
+                    check_box = QCheckBox()
+                    check_box.setText(key)
                     if checked:
-                        checkBox.setChecked(True)
-                    checkBox.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
-                    self.checkBoxList[key] = checkBox
+                        check_box.setChecked(True)
+                    check_box.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
+                    self.checkBoxList[key] = check_box
                     self.comboBox.addItems(DataBase.AllRef["CardData"][key])
-                    reflist.extend(DataBase.AllRef["CardData"][key])
-                    self.horizontalLayout_CheckBox.addWidget(checkBox)
-                for key in DataBase.AllGuid.keys():
+                    ref_list.extend(DataBase.AllRef["CardData"][key])
+                    self.horizontalLayout_CheckBox.addWidget(check_box)
+                for i, key in enumerate(DataBase.AllGuid.keys()):
                     if key == "CardData":
                         continue
-                    checkBox = QCheckBox()
-                    checkBox.setText(key)
+                    check_box = QCheckBox()
+                    check_box.setText(key)
                     if checked:
-                        checkBox.setChecked(True)
-                    checkBox.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
-                    self.checkBoxList[key] = checkBox
+                        check_box.setChecked(True)
+                    check_box.stateChanged.connect(self.on_GameSourceModifyCheckBoxStateChanged)
+                    self.checkBoxList[key] = check_box
                     self.comboBox.addItems(list(DataBase.AllGuid[key].keys()))
-                    reflist.extend(list(DataBase.AllGuid[key]))
-                    self.horizontalLayout_CheckBox2.addWidget(checkBox)
-                self.m_completer = QCompleter(reflist, self)
+                    ref_list.extend(list(DataBase.AllGuid[key]))
+                    self.horizontalLayout_CheckBox2.addWidget(check_box, i // 12, i % 12)
+                self.m_completer = QCompleter(ref_list, self)
+
+            elif self.field_name == "DataObjectModify":
+                target = DataBase.AllRef
+                ref_list = []
+                self.checkBoxList = {}
+                for i, key in enumerate(sorted(target.keys())):
+                    check_box = QCheckBox()
+                    check_box.setText(key)
+                    if checked:
+                        check_box.setChecked(True)
+
+                    check_box.stateChanged.connect(self.on_dom_check_box_state_changed)
+                    self.checkBoxList[key] = check_box
+
+                    # data = target[key]
+                    # self.comboBox.addItems(data)
+                    # if isinstance(data, dict):
+                    #     keys = [item for v in data.values() if isinstance(v, list) for item in v]
+                    # else:
+                    #     keys = data if isinstance(data, list) else []
+                    # ref_list.extend(keys)
+
+                    self.horizontalLayout_CheckBox2.addWidget(check_box, i // 12, i % 12)
+                self.m_completer = QCompleter(ref_list, self)
+
             elif self.field_name in DataBase.AllEnum:
                 self.comboBox.addItems(DataBase.AllEnum[self.field_name].keys())
                 self.m_completer = QCompleter(DataBase.AllEnum[self.field_name].keys(), self)
@@ -104,25 +131,25 @@ class SelectGUI(QDialog, Ui_Select):
                 self.comboBox.addItems(DataBase.AllRef[self.field_name])
                 self.m_completer = QCompleter(DataBase.AllRef[self.field_name], self)
             elif self.field_name == "ScriptableObject":
-                reflist = []
+                ref_list = []
                 self.checkBoxList = {}
                 for key in DataBase.AllRef.keys():
                     if key == "CardData" or key.find("Tag") != -1:
-                        checkBox = QCheckBox()
-                        checkBox.setText(key)
+                        check_box = QCheckBox()
+                        check_box.setText(key)
                         if checked:
-                            checkBox.setChecked(True)
-                        self.checkBoxList[key] = checkBox
-                        checkBox.stateChanged.connect(self.on_ScriptableObjectCheckBoxStateChanged)
+                            check_box.setChecked(True)
+                        self.checkBoxList[key] = check_box
+                        check_box.stateChanged.connect(self.on_ScriptableObjectCheckBoxStateChanged)
                         if key == "CardData":
                             for sub_key in DataBase.AllRef[key].keys():
                                 self.comboBox.addItems(DataBase.AllRef[key][sub_key])
-                                reflist.extend(DataBase.AllRef[key][sub_key])
+                                ref_list.extend(DataBase.AllRef[key][sub_key])
                         else:
                             self.comboBox.addItems(DataBase.AllRef[key])
-                            reflist.extend(DataBase.AllRef[key])
-                        self.horizontalLayout_CheckBox.addWidget(checkBox)
-                self.m_completer = QCompleter(reflist, self)
+                            ref_list.extend(DataBase.AllRef[key])
+                        self.horizontalLayout_CheckBox.addWidget(check_box)
+                self.m_completer = QCompleter(ref_list, self)
             elif self.field_name == "BlueprintCardDataCardTabGroup":
                 self.comboBox.addItems(DataBase.AllBlueprintTab)
                 self.m_completer = QCompleter(DataBase.AllBlueprintTab, self)
@@ -169,16 +196,47 @@ class SelectGUI(QDialog, Ui_Select):
     @log_exception(True)
     def on_GameSourceModifyCheckBoxStateChanged(self, a0: int):
         self.comboBox.clear()
-        reflist = []
+        ref_list = []
         for key in self.checkBoxList.keys():
             if self.checkBoxList[key].isChecked():
                 if key in DataBase.AllRef["CardData"]:
-                    reflist.extend(DataBase.AllRef["CardData"][key])
+                    ref_list.extend(DataBase.AllRef["CardData"][key])
                     self.comboBox.addItems(DataBase.AllRef["CardData"][key])
                 elif key in DataBase.AllGuid:
-                    reflist.extend(list(DataBase.AllGuid[key].keys()))
+                    ref_list.extend(list(DataBase.AllGuid[key].keys()))
                     self.comboBox.addItems(list(DataBase.AllGuid[key].keys()))
-        self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
+        self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
+
+    @log_exception(True)
+    def on_dom_check_box_state_changed(self, state: int):
+        self.comboBox.clear()
+        self.checked_type = None
+        ref_list = []
+
+        target = DataBase.AllRef
+
+        if state != 2:
+            self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
+            return
+
+        sender = self.sender()
+        for key, cb in self.checkBoxList.items():
+            if cb is not sender:
+                cb.blockSignals(True)
+                cb.setChecked(False)
+                cb.blockSignals(False)
+                continue
+
+            if key in target:
+                data = target[key]
+                if isinstance(data, dict):
+                    keys = [item for v in data.values() if isinstance(v, list) for item in v]
+                else:
+                    keys = data if isinstance(data, list) else []
+                ref_list.extend(keys)
+                self.comboBox.addItems(keys)
+                self.checked_type = key
+        self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
 
     @log_exception(True)
     def on_ScriptableObjectCheckBoxStateChanged(self, a0: int):

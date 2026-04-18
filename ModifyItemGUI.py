@@ -15,10 +15,10 @@ from MyLogger import *
 
 
 class ModifyItemGUI(ItemGUI):
-    def __init__(self, parent=None, field: str = "", key: str = "", item_name: str = "", guid: str = "", \
+    def __init__(self, parent=None, field: str = "", key: str = "", item_name: str = "", guid: str = "",
                  auto_resize: bool = True, auto_replace_key_guid: bool = False, mod_info: dict = None,
                  mod_path: str = ""):
-        super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid, \
+        super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid,
                                             auto_resize, auto_replace_key_guid, mod_info, mod_path)
 
     # override
@@ -189,7 +189,7 @@ class ModifyItemGUI(ItemGUI):
         if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
             data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
             if self.auto_replace_key_guid:
-                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid)
+                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid)
             self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)
@@ -215,7 +215,7 @@ class ModifyItemGUI(ItemGUI):
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Name"], self.item_name, self.guid,
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid,
                                                              item.key(), i)
                 self.addWarpItem(index, "Collection", data)
 
