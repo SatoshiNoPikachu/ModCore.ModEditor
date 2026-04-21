@@ -100,6 +100,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
             self.save_config()
 
+        if self.config.has_option("Config", "LocalizationFileName"):
+            DataBase.LocalizationFileName = self.config.get("Config", "LocalizationFileName") + '.csv'
+        else:
+            DataBase.LocalizationFileName = "En.csv"
+            self.config.set("Config", "LocalizationFileName", "En")
+            self.save_config()
+
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:

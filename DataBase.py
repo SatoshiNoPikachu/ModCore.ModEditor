@@ -52,7 +52,8 @@ class DataBase(object):
     RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
                    "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
     SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject", "DataObjectModify"]
+                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject",
+                   "DataObjectModify"]
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -88,6 +89,10 @@ class DataBase(object):
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
 
     AutoCompleteUpdate = False
+
+    LocalizationFileName = "En.csv"
+
+    CurModName = ""
 
     def __init__(self):
         pass
@@ -131,6 +136,8 @@ class DataBase(object):
 
     @staticmethod
     def LoadModData(mod_name, mod_dir):
+        DataBase.CurModName = mod_name
+
         DataBase.AllRef = {}
         DataBase.AllGuid = {}
         DataBase.AllGuidPlain = {}
@@ -172,7 +179,7 @@ class DataBase(object):
                     if file.suffix.lower() in ext_audio:
                         DataBase.AllRef["AudioClip"].append(file.stem)
 
-        path_lz = path_root / "Localization/SimpCn.csv"
+        path_lz = path_root / f"Resource/Localization/{DataBase.LocalizationFileName}"
         if path_lz.exists() and path_lz.is_file():
             with path_lz.open("r", encoding='utf-8') as f:
                 lines = f.readlines(-1)
@@ -182,12 +189,12 @@ class DataBase(object):
                         if line.find('"') != -1:
                             new_keys = line.split('"')
                             if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                                DataBase.AllModSimpCn[new_keys[0][:-1]] = {
+                                DataBase.AllModSimpCn[f'{mod_name}_{new_keys[0][-1]}'] = {
                                     "original": new_keys[1].replace('"', ''),
                                     "translate": new_keys[2][1:].replace("\n", "")}
                     elif len(keys) == 3:
-                        DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
-                                                          "translate": keys[2].replace("\n", "")}
+                        DataBase.AllModSimpCn[f'{mod_name}_{keys[0]}'] = {"original": keys[1].replace('"', ''),
+                                                                          "translate": keys[2].replace("\n", "")}
                     else:
                         QtCore.qWarning(b"Wrong Format Key")
 
@@ -217,7 +224,6 @@ class DataBase(object):
                         continue
                     ref = mod_name + "_" + file_name[:-5]
                     if p == "CardData":
-                        print(file)
                         DataBase.AllRef[p]["Mod"].append(ref)
                         DataBase.AllGuid[p].update({ref: guid})
                         DataBase.AllGuidPlain.update({ref: guid})
@@ -511,33 +517,34 @@ class DataBase(object):
     def loadModSimpCn(mod_dir):
         p = Path(mod_dir)
         if p.name == "Data":
-            mod_dir = str(p.parent)
+            p = p.parent
+        p = p / f"Resource/Localization/{DataBase.LocalizationFileName}"
+        if not p.exists():
+            return
 
-        for dir in os.listdir(mod_dir):
-            if os.path.isdir(mod_dir + r"/" + dir) and dir == "Localization" and os.path.exists(
-                    mod_dir + r"/" + dir + r"/SimpCn.csv"):
-                with open(mod_dir + r"/" + dir + r"/SimpCn.csv", "r", encoding='utf-8') as f:
-                    lines = f.readlines(-1)
-                    for line in lines:
-                        keys = line.split(',')
-                        if len(keys) > 3 and line.find('"') != -1:
-                            new_keys = line.split('"')
-                            if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                                if new_keys[0][:-1] not in DataBase.AllModSimpCn:
-                                    DataBase.AllModSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"', ''),
-                                                                               "translate": new_keys[2][1:].replace(
-                                                                                   "\n", "")}
-                                else:
-                                    DataBase.AllModSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n",
-                                                                                                                   "")
-                        elif len(keys) == 3:
-                            if keys[0] not in DataBase.AllModSimpCn:
-                                DataBase.AllModSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
-                                                                  "translate": keys[2].replace("\n", "")}
-                            else:
-                                DataBase.AllModSimpCn[keys[0]]["translate"] = keys[2].replace("\n", "")
+        with p.open("r", encoding='utf-8') as f:
+            lines = f.readlines(-1)
+            for line in lines:
+                keys = line.split(',')
+                if len(keys) > 3 and line.find('"') != -1:
+                    new_keys = line.split('"')
+                    if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
+                        k = f'{DataBase.CurModName}_{new_keys[0][:-1]}'
+                        if k not in DataBase.AllModSimpCn:
+                            DataBase.AllModSimpCn[k] = {"original": new_keys[1].replace('"', ''),
+                                                        "translate": new_keys[2][1:].replace("\n", "")}
                         else:
-                            QtCore.qWarning(b"Wrong Format Key")
+                            DataBase.AllModSimpCn[k]["translate"] = new_keys[2][1:].replace("\n", "")
+                elif len(keys) == 3:
+                    k = f'{DataBase.CurModName}_{keys[0]}'
+
+                    if k not in DataBase.AllModSimpCn:
+                        DataBase.AllModSimpCn[k] = {"original": keys[1].replace('"', ''),
+                                                    "translate": keys[2].replace("\n", "")}
+                    else:
+                        DataBase.AllModSimpCn[k]["translate"] = keys[2].replace("\n", "")
+                else:
+                    QtCore.qWarning(b"Wrong Format Key")
 
     @staticmethod
     def autoTranslationDuplicates(mod_dir):
@@ -626,13 +633,22 @@ class DataBase(object):
     def saveModSimpCn(mod_dir, loadSrc: bool = True):
         p = Path(mod_dir)
         if p.name == "Data":
-            mod_dir = str(p.parent)
+            p = p.parent
+        p = p / f"Resource/Localization/{DataBase.LocalizationFileName}"
+        if not p.exists():
+            return
+
+        prefix = f'{DataBase.CurModName}_'
+        prefixLen = len(prefix)
 
         if loadSrc:
             DataBase.loadModSimpCn(mod_dir)
-        with open(mod_dir + r"/Localization/SimpCn.csv", "w", encoding='utf-8') as f:
+        with p.open("w", encoding='utf-8') as f:
             for key in DataBase.AllModSimpCn:
-                f.write(key)
+                if key.startswith(prefix):
+                    f.write(key[prefixLen:])
+                else:
+                    f.write(key)
                 f.write(',"')
                 f.write(DataBase.AllModSimpCn[key]["original"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('",')
