@@ -44,7 +44,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.setupUi(self)
 
         self.trans = QTranslator()
-        logInit(os.path.join(QDir.currentPath(), "logoutput.log"))
+        logInit(os.path.join(QDir.currentPath(), "logoutput_mc.log"))
         self.load_config()
         self.loadLanguage()
 
