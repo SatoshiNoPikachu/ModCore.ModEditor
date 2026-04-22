@@ -159,6 +159,8 @@ class DataBase(object):
         DataBase.AllModSimpCn = {}
 
         path_mod = Path(mod_dir)
+        path_mod.mkdir(parents=True, exist_ok=True)
+
         path_root = path_mod.parent
 
         path_res = path_root / "Resource"
