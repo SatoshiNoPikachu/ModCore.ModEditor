@@ -838,7 +838,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if os.path.exists(QDir.currentPath() + r"/Mods/" + mod_name):
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Mod folder with the same name exists'))
             return
-        shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseMod", QDir.currentPath() + r"/Mods/" + mod_name)
+        shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseModMC", QDir.currentPath() + r"/Mods/" + mod_name)
         self.load_mod(QDir.currentPath() + r"/Mods/" + mod_name)
 
     @log_exception(True)
