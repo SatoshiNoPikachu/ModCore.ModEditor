@@ -224,7 +224,7 @@ class DataBase(object):
                         guid = data[start_mark + 1:end_mark].decode()
                     if guid is None or guid == "":
                         continue
-                    ref = mod_name + "_" + file_name[:-5]
+                    ref = f'{mod_name}:{file_name[:-5]}'
                     if p == "CardData":
                         DataBase.AllRef[p]["Mod"].append(ref)
                         DataBase.AllGuid[p].update({ref: guid})
