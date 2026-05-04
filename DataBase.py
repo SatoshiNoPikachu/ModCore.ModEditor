@@ -34,7 +34,7 @@ def loopReplaceLocalizationKeyAndReplaceGuid(jsondata: dict, mod_name: str, card
             for item in jsondata[key]:
                 loopReplaceLocalizationKeyAndReplaceGuid(item, mod_name, card_name, guid, entry_key, index)
         elif key == "ParentObjectID" and guid != "" and jsondata["ParentObjectID"] != "":
-            jsondata["ParentObjectID"] = guid
+            jsondata["ParentObjectID"] = ""
 
 
 def delete_keys_from_dict(src_dict, key: str):
