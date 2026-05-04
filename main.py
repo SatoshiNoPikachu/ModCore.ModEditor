@@ -107,7 +107,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "LocalizationFileName", "En")
             self.save_config()
 
-
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -195,6 +194,21 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.quick_close.activated.connect(self.on_quick_close)
 
         self.lineEdit.returnPressed.connect(self.on_lineEditReturnPressed)
+
+        self.treeView.installEventFilter(self)
+
+    def eventFilter(self, source, event):
+        if source is self.treeView and event.type() == QEvent.KeyPress:
+            if event.key() == Qt.Key_C and (event.modifiers() & Qt.ControlModifier):
+                index = self.treeView.currentIndex()
+                if index.isValid():
+                    file_name = Path(self.file_model.fileName(index))
+
+                    clipboard = QApplication.clipboard()
+                    clipboard.setText(file_name.stem)
+                    return True
+
+        return super().eventFilter(source, event)
 
     @log_exception(True)
     def on_select_Chinese(self, checked: bool = False):
