@@ -251,8 +251,8 @@ class DataBase(object):
                                 if len(name_parts) > 2:
                                     DataBase.AllRef["ContentDisplayer"].append(name_parts[0] + "_" + name_parts[1])
                         if file.endswith(".json"):
-                            ref = file_name[:-5]
-                            DataBase.AllRef[sub_dir].append(file_name[:-5])
+                            ref = f'{mod_name}:{file_name[:-5]}'
+                            DataBase.AllRef[sub_dir].append(ref)
                             DataBase.AllPath[sub_dir].update({ref: file})
                             DataBase.AllScriptableObject.update({ref: ref})
 
