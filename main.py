@@ -614,6 +614,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if is_uid_type(type_name):
                 target_key = remove_postfix(target_key)
 
+            target_key = target_key.replace(":", "@", 1)
+
             path_dir = Path(file_path) / dir_name
             path_file = path_dir / f'{target_key}.json'
 
@@ -762,7 +764,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(self, self.tr("Warning"), self.tr('暂时不支持非本模组命名空间。'))
                     return
 
-                ref = f'{ns}_{key}' if ns != '' else key
+                ref = f'{ns}:{key}' if ns != '' else key
 
                 path_tmp = DataBase.AllPathPlain.get(ref)
                 if path_tmp is None:
