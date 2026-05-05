@@ -360,36 +360,6 @@ class DataBase(object):
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
-        try:
-            for mod_ref_dir in os.listdir(DataBase.DataDir + r"/Mods/ModReference/"):
-                if os.path.isdir(DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir):
-                    for file in os.listdir(
-                            DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
-                        if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
-                            with open(
-                                    DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file,
-                                    encoding='utf-8') as f:
-                                temp = json.loads(f.read(-1))
-                                DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
-                                DataBase.AllGuidBase[file[:-5]].update(temp)
-                                DataBase.AllGuidPlainBase.update(temp)
-                                DataBase.AllScriptableObjectBase.update(temp)
-
-                    for file in os.listdir(
-                            DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
-                        if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
-                            with open(
-                                    DataBase.DataDir + r"/Mods/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file,
-                                    encoding='utf-8') as f:
-                                temp = json.loads(f.read(-1))
-                                DataBase.AllCardDataBase.update(temp)
-                                DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
-                                DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
-                                DataBase.AllGuidPlainBase.update(temp)
-                                DataBase.AllScriptableObjectBase.update(temp)
-        except Exception as ex:
-            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-
     @staticmethod
     def loadPath():
         DataBase.AllPathBase = {}  # Type: {Key: Path}
