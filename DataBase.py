@@ -94,6 +94,8 @@ class DataBase(object):
 
     CurModName = ""
 
+    ModsWorkDir = ""
+
     def __init__(self):
         pass
 
@@ -154,6 +156,7 @@ class DataBase(object):
         DataBase.AllScriptableObject.update(copy.deepcopy(DataBase.AllScriptableObjectBase))
 
         DataBase.AllRef["CardData"]["Mod"] = []
+        DataBase.AllRef["CardData"]["ModsWork"] = []
         DataBase.AllRef["ContentDisplayer"] = []
 
         DataBase.AllModSimpCn = {}
@@ -164,22 +167,10 @@ class DataBase(object):
         path_root = path_mod.parent
 
         path_res = path_root / "Resource"
-        if path_res.exists() and path_res.is_dir():
-            path_tex = path_res / "Texture2D"
-            path_audio = path_res / "Audio"
+        path_tex = path_res / "Texture2D"
+        # path_audio = path_res / "Audio"
 
-            ext_tex = {".png", ".jpg", ".jpeg"}
-            ext_audio = {".wav"}
-
-            if path_tex.exists() and path_tex.is_dir():
-                for file in path_tex.rglob('*'):
-                    if file.suffix.lower() in ext_tex:
-                        DataBase.AllRef["Sprite"].append(file.stem)
-
-            if path_audio.exists() and path_audio.is_dir():
-                for file in path_audio.iterdir():
-                    if file.suffix.lower() in ext_audio:
-                        DataBase.AllRef["AudioClip"].append(file.stem)
+        DataBase.load_mod_tex(path_tex, f'{mod_name}:')
 
         path_lz = path_root / f"Resource/Localization/{DataBase.LocalizationFileName}"
         if path_lz.exists() and path_lz.is_file():
@@ -256,11 +247,178 @@ class DataBase(object):
                             DataBase.AllPath[sub_dir].update({ref: file})
                             DataBase.AllScriptableObject.update({ref: ref})
 
+        DataBase.load_work_ml(path_root)
+        DataBase.load_mods_work_dir()
+
         for key in DataBase.AllPath:
             DataBase.AllPathPlain.update(copy.deepcopy(DataBase.AllPath[key]))
 
         DataBase.AllGuidPlainRev = {v: k for k, v in DataBase.AllGuidPlain.items()}
         pass
+
+    @classmethod
+    def load_mods_work_dir(cls):
+        if cls.ModsWorkDir == "":
+            return
+
+        path_mwd = Path(cls.ModsWorkDir)
+        if not path_mwd.is_absolute():
+            path_mwd = Path(cls.DataDir) / path_mwd
+
+        if not path_mwd.is_dir():
+            return
+
+        for d in path_mwd.iterdir():
+            if not d.is_dir():
+                continue
+
+            ns = cls.load_work_mc(d)
+            if ns == cls.CurModName:
+                continue
+
+            cls.load_work_ml(d)
+
+    @classmethod
+    def load_work_mc(cls, path: Path) -> str:
+        path_meta = path / "ModMeta.json"
+
+        if not path_meta.exists() or not path_meta.is_file():
+            return ""
+
+        try:
+            with path_meta.open('r', encoding='utf-8') as f:
+                ns = json.load(f).get("Namespace")
+        except:
+            return ""
+
+        if not isinstance(ns, str) or ns == "":
+            return ""
+
+        if ns == cls.CurModName:
+            return ns
+
+        path_data = path / "Data"
+        prefix = f'{ns}:'
+        cls.load_work_mod_uo(path_data, prefix)
+        cls.load_work_mod_so(path_data, prefix)
+        cls.load_mod_tex(path / "Resource/Texture2D", prefix)
+
+        return ns
+
+    @classmethod
+    def load_work_ml(cls, path: Path):
+        path_info = path / "ModInfo.json"
+        if not path_info.exists():
+            return
+
+        try:
+            with path_info.open('r', encoding='utf-8') as f:
+                name = json.load(f).get("Name")
+        except:
+            return
+
+        if not isinstance(name, str) or name == "":
+            return
+
+        prefix = f'{name}_'
+        cls.load_work_mod_uo(path, prefix)
+        cls.load_work_mod_so(path, "")
+        cls.load_mod_audio(path / "Resource/Audio", "")
+
+    @classmethod
+    def load_work_mod_uo(cls, path: Path, prefix: str):
+        if not path.exists() or not path.is_dir():
+            return
+
+        for d in path.iterdir():
+            t = d.name
+
+            if not d.is_dir() or t not in cls.AllGuid:
+                continue
+
+            is_card = t == "CardData"
+
+            for p in d.rglob('*.json'):
+                if not p.is_file():
+                    continue
+
+                with p.open("rb") as f:
+                    data = f.read(-1)
+                    guid_idx = data.find(b'"UniqueID"')
+                    if guid_idx == -1:
+                        continue
+                    start_mark = data.find(b'"', guid_idx + len('"UniqueID"'))
+                    if start_mark == -1:
+                        continue
+                    end_mark = data.find(b'"', start_mark + 1)
+                    if end_mark == -1:
+                        continue
+                    guid = data[start_mark + 1:end_mark].decode()
+
+                if guid is None or guid == "":
+                    continue
+
+                ref = prefix + p.stem
+                if is_card:
+                    cls.AllRef[t]["ModsWork"].append(ref)
+                    cls.AllCardData.update({ref: guid})
+                else:
+                    cls.AllRef[t].append(ref)
+
+                cls.AllGuid[t].update({ref: guid})
+                cls.AllGuidPlain.update({ref: guid})
+                cls.AllPath[t].update({ref: str(p)})
+                cls.AllScriptableObject.update({ref: guid})
+
+    @classmethod
+    def load_work_mod_so(cls, path: Path, prefix: str):
+        path = path / "ScriptableObject"
+
+        if not path.exists() or not path.is_dir():
+            return
+
+        for d in path.iterdir():
+            t = d.name
+
+            if not d.is_dir() or t not in cls.AllRef:
+                continue
+
+            for p in d.rglob('*.json'):
+                if not p.is_file():
+                    continue
+
+                ref = prefix + p.stem
+                cls.AllRef[t].append(ref)
+                cls.AllPath[t].update({ref: str(p)})
+                cls.AllScriptableObject.update({ref: ref})
+
+    @classmethod
+    def load_mod_audio(cls, path: Path, prefix: str):
+        if not path.exists() or not path.is_dir():
+            return
+
+        ext_audio = {".wav"}
+
+        for file in path.iterdir():
+            if not file.is_file():
+                continue
+
+            if file.suffix.lower() in ext_audio:
+                cls.AllRef["AudioClip"].append(file.stem)
+
+    @classmethod
+    def load_mod_tex(cls, path: Path, prefix: str):
+        if not path.exists() or not path.is_dir():
+            return
+
+        ext_tex = {".png", ".jpg", ".jpeg"}
+
+        for file in path.rglob('*'):
+            if not file.is_file():
+                continue
+
+            if file.suffix.lower() in ext_tex:
+                cls.AllRef["Sprite"].append(f'{prefix}{file.stem}')
 
     @staticmethod
     def loadName():

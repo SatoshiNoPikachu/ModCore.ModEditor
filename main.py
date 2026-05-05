@@ -107,6 +107,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "LocalizationFileName", "En")
             self.save_config()
 
+        if self.config.has_option("Config", "ModsWorkDir"):
+            DataBase.ModsWorkDir = self.config.get("Config", "ModsWorkDir")
+        else:
+            DataBase.ModsWorkDir = "Mods"
+            self.config.set("Config", "ModsWorkDir", "Mods")
+            self.save_config()
+
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -760,9 +768,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 data_type = Path(file_path).parent.name
 
                 ns, key = resolve_data_key(key)
-                if ns != '' and ns != self.mod_info['Namespace']:
-                    QMessageBox.warning(self, self.tr("Warning"), self.tr('暂时不支持非本模组命名空间。'))
-                    return
 
                 ref = f'{ns}:{key}' if ns != '' else key
 
