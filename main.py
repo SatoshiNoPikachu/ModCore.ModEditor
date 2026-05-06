@@ -114,7 +114,6 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "ModsWorkDir", "Mods")
             self.save_config()
 
-
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -204,18 +203,28 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.lineEdit.returnPressed.connect(self.on_lineEditReturnPressed)
 
         self.treeView.installEventFilter(self)
+        self.treeView.viewport().installEventFilter(self)
 
     def eventFilter(self, source, event):
-        if source is self.treeView and event.type() == QEvent.KeyPress:
-            if event.key() == Qt.Key_C and (event.modifiers() & Qt.ControlModifier):
-                index = self.treeView.currentIndex()
-                if index.isValid():
-                    file_name = Path(self.file_model.fileName(index))
+        if source is self.treeView:
+            if event.type() == QEvent.KeyPress:
+                if event.key() == Qt.Key_C and (event.modifiers() & Qt.ControlModifier):
+                    index = self.treeView.currentIndex()
+                    if index.isValid():
+                        file_name = Path(self.file_model.fileName(index))
 
-                    clipboard = QApplication.clipboard()
-                    clipboard.setText(file_name.stem)
-                    return True
-
+                        clipboard = QApplication.clipboard()
+                        clipboard.setText(file_name.stem)
+                        return True
+        elif source is self.treeView.viewport():
+            if event.type() == QEvent.MouseButtonPress:
+                if event.button() == Qt.LeftButton and (event.modifiers() & Qt.ControlModifier):
+                    index = self.treeView.indexAt(event.pos())
+                    if index.isValid():
+                        file_path = Path(self.file_model.filePath(index))
+                        if file_path.exists():
+                            QDesktopServices.openUrl(QUrl.fromLocalFile(str(file_path)))
+                        return True
         return super().eventFilter(source, event)
 
     @log_exception(True)
