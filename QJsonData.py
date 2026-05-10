@@ -164,6 +164,7 @@ class QJsonTreeItem(object):
     def status(self):
         return self.mStatus
 
+    @staticmethod
     def load(value, itemField="", parent=None, itemKey=None):
         rootItem = QJsonTreeItem(parent)
         if itemKey is None:
