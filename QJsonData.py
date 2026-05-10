@@ -319,7 +319,7 @@ class QJsonTreeItem(object):
         elif isinstance(value, list):
             rootItem.setType(list)
             if len(value) > 0:
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
 
@@ -332,7 +332,7 @@ class QJsonTreeItem(object):
                 rootItem.appendChild(str(i), child)
         else:
             if value:
-                if rootItem.parent is not None:
+                if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
             else:
