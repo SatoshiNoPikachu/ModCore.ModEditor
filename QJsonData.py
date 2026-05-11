@@ -30,6 +30,8 @@ class QJsonTreeItem(object):
         self.mStatus = "Normal"
         self.mCustomNote = ""
 
+        self.IsOverride = False
+
     def appendChild(self, key, item):
         self.mChilds[key] = item
 
@@ -170,6 +172,9 @@ class QJsonTreeItem(object):
         if itemKey is None:
             rootItem.setKey("root")
         else:
+            if itemKey == "$override":
+                itemField = parent.field()
+                rootItem.IsOverride = True
             rootItem.setKey(itemKey)
 
         if itemField in DataBase.AllTypeField or itemField in DataBase.AllEnum:
@@ -180,6 +185,9 @@ class QJsonTreeItem(object):
             rootItem.setDepth(0)
         else:
             rootItem.setDepth(parent.depth() + 1)
+
+            if parent.IsOverride:
+                rootItem.IsOverride = True
 
         # try:
         #     value = value.toVariant()
@@ -265,8 +273,8 @@ class QJsonTreeItem(object):
 
             if DataBase.AutoCompleteUpdate:
                 if (
-                        itemField in DataBase.AllTypeField and itemField not in DataBase.RefGuidList and itemField not in DataBase.RefNameList) or \
-                        (itemField in DataBase.AllTypeField and parent is None):
+                        itemField in DataBase.AllTypeField and itemField not in DataBase.RefGuidList and itemField not in DataBase.RefNameList) or (
+                        itemField in DataBase.AllTypeField and parent is None):
                     missing_list = [k for k in DataBase.AllTypeField[itemField].keys() if k not in value.keys()]
                     for key in missing_list:
                         keyField = DataBase.AllTypeField[itemField][key]
@@ -813,12 +821,11 @@ class QJsonModel(QAbstractItemModel):
             return False
         return True
 
-    def flags(self, index: QModelIndex) -> Qt.ItemFlags:
-        if self.is_modify:
+    def flags(self, index: QModelIndex) -> Qt.ItemFlag | Qt.ItemFlags:
+        if self.is_modify and not (item := index.internalPointer()).IsOverride:
             if index.column() == 0:
                 return Qt.ItemFlag.ItemIsEnabled
             elif index.column() == 1:
-                item = index.internalPointer()
                 parentItem = item.parentDepth(1)
                 if parentItem is not None and not parentItem.key().endswith("WarpData"):
                     return Qt.ItemFlag.NoItemFlags
