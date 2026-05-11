@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+from pathlib import Path
 
 import ujson as json
 import re
@@ -15,14 +16,14 @@ pattern_negative = ''': -'''
 pattern_FileID = '''m_FileID'''
 
 
-def exportToZip(dir: str, mod_info: dict):
+def exportToZip(dir: Path, file_name: str):
+    temp_dir = dir / "_temp~"
     try:
-        temp_dir = dir + "_temp~"
-        if os.path.isdir(dir):
-            shutil.copytree(dir, temp_dir + "/" + mod_info["Name"], ignore=shutil.ignore_patterns(".git"))
+        if dir.is_dir():
+            shutil.copytree(dir, temp_dir / dir.name, ignore=shutil.ignore_patterns(".git"))
             files = [y for x in os.walk(temp_dir) for y in glob(os.path.join(x[0], '*.json'))]
             for file in files:
-                if file.endswith("ModInfo.json"):
+                if file.endswith("ModInfo.json") or file.endswith("ModMeta.json"):
                     continue
                 else:
                     with open(file, "r", encoding='utf-8') as f:
@@ -30,9 +31,8 @@ def exportToZip(dir: str, mod_info: dict):
                         toJsonMinimalism(json_data)
                     with open(file, "w", encoding="utf-8") as f:
                         json.dump(json_data, f, ensure_ascii=False)
-            zipname = os.path.split(temp_dir)[0] + "/%s-%s-ModLoader%s" % (
-            mod_info["Name"], mod_info["Version"], mod_info["ModLoaderVerison"])
-            shutil.make_archive(zipname, 'zip', temp_dir)
+            zip_name = str(dir / file_name)
+            shutil.make_archive(zip_name, 'zip', temp_dir)
             shutil.rmtree(temp_dir)
     except Exception as ex:
         if os.path.isdir(temp_dir):

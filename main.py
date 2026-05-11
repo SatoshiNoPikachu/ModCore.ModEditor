@@ -884,10 +884,29 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def on_exportZip(self, checked: bool = False):
-        if self.mod_info:
-            self.on_saveMod()
-            QMessageBox.warning(self, self.tr("Warning"), self.tr('ModCore Version not supported export zip file.'))
-            # ExportToZip.exportToZip(self.mod_path, self.mod_info)
+        new_item = None
+
+        def callback():
+            text = new_item.lineEdit.text()
+            if text:
+                self.on_saveMod()
+                ExportToZip.exportToZip(Path(self.mod_path).parent, text)
+
+        if not self.mod_info:
+            return
+
+        meta = self.mod_info
+        name = get_mod_display_name(meta)
+        version = get_mod_version(meta)
+
+        fn = f'{name}-v{version}' if version else name
+
+        new_item = NewItemGUI.NewItemGUI(self)
+        new_item.setWindowTitle("Export Zip")
+        new_item.label.setText("Enter file name")
+        new_item.lineEdit.setText(fn)
+        new_item.buttonBox.accepted.connect(callback)
+        new_item.exec_()
 
     @log_exception(True)
     def on_loadMod(self, checked: bool = False):
