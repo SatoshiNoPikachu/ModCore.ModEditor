@@ -848,7 +848,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def delGameSourceModifyTemplate(self, json):
         if type(json) == dict:
             for key in list(json.keys()):
-                if not key.endswith("WarpType") and not key.endswith("WarpData"):
+                if not key.endswith("WarpType") and not key.endswith("WarpData") and not key.startswith("$"):
                     del json[key]
 
     @log_exception(True)
