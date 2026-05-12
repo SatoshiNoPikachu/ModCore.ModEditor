@@ -28,7 +28,7 @@ from pathlib import Path
 
 # from functools import partial
 
-ModEditorVersion = "1.0.4"
+ModEditorVersion = "1.0.5"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
