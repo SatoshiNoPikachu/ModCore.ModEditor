@@ -929,9 +929,16 @@ class QJsonModel(QAbstractItemModel):
                     return ""
                 if item.key() == "m_FileID" or item.key() == "m_PathID":
                     return ""
+
                 if item.field() == "WarpRef":
-                    if item.value() in DataBase.AllGuidPlainRev:
+                    v: str = item.value()
+                    if v in DataBase.AllGuidPlainRev:
                         return DataBase.AllGuidPlainRev[item.value()]
+
+                    if (t := resolve_ref_type(v)) is not None:
+                        if (d := DataBase.AllScriptableObjectRev.get(t)) is not None and (r := d.get(v)):
+                            return r
+
                 if item.field() in DataBase.AllEnumRev:
                     if item.value() in DataBase.AllEnumRev[item.field()]:
                         return DataBase.AllEnumRev[item.field()][item.value()]

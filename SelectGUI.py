@@ -130,26 +130,29 @@ class SelectGUI(QDialog, Ui_Select):
             elif self.field_name in DataBase.AllRef:
                 self.comboBox.addItems(DataBase.AllRef[self.field_name])
                 self.m_completer = QCompleter(DataBase.AllRef[self.field_name], self)
+
             elif self.field_name == "ScriptableObject":
                 ref_list = []
                 self.checkBoxList = {}
-                for key in DataBase.AllRef.keys():
+                for key in DataBase.AllScriptableObject.keys():
                     if key == "CardData" or key.find("Tag") != -1:
                         check_box = QCheckBox()
                         check_box.setText(key)
                         if checked:
                             check_box.setChecked(True)
                         self.checkBoxList[key] = check_box
-                        check_box.stateChanged.connect(self.on_ScriptableObjectCheckBoxStateChanged)
-                        if key == "CardData":
-                            for sub_key in DataBase.AllRef[key].keys():
-                                self.comboBox.addItems(DataBase.AllRef[key][sub_key])
-                                ref_list.extend(DataBase.AllRef[key][sub_key])
-                        else:
-                            self.comboBox.addItems(DataBase.AllRef[key])
-                            ref_list.extend(DataBase.AllRef[key])
+                        check_box.stateChanged.connect(self.on_so_check_box_state_changed)
+                        # if key == "CardData":
+                        #     for sub_key in DataBase.AllRef[key].keys():
+                        #         self.comboBox.addItems(DataBase.AllRef[key][sub_key])
+                        #         ref_list.extend(DataBase.AllRef[key][sub_key])
+                        # else:
+                        #     self.comboBox.addItems(DataBase.AllRef[key])
+                        #     ref_list.extend(DataBase.AllRef[key])
                         self.horizontalLayout_CheckBox.addWidget(check_box)
+                # self.comboBox.addItems(DataBase.AllScriptableObject.keys())
                 self.m_completer = QCompleter(ref_list, self)
+
             elif self.field_name == "BlueprintCardDataCardTabGroup":
                 self.comboBox.addItems(DataBase.AllBlueprintTab)
                 self.m_completer = QCompleter(DataBase.AllBlueprintTab, self)
@@ -239,20 +242,30 @@ class SelectGUI(QDialog, Ui_Select):
         self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
 
     @log_exception(True)
-    def on_ScriptableObjectCheckBoxStateChanged(self, a0: int):
+    def on_so_check_box_state_changed(self, state: int):
         self.comboBox.clear()
-        reflist = []
-        for key in DataBase.AllRef.keys():
-            if key == "CardData" or key.find("Tag") != -1:
-                if self.checkBoxList[key].isChecked():
-                    if key == "CardData":
-                        for sub_key in DataBase.AllRef[key].keys():
-                            self.comboBox.addItems(DataBase.AllRef[key][sub_key])
-                            reflist.extend(DataBase.AllRef[key][sub_key])
-                    else:
-                        reflist.extend(DataBase.AllRef[key])
-                        self.comboBox.addItems(DataBase.AllRef[key])
-        self.m_completer.setModel(QStringListModel(reflist, self.m_completer))
+        ref_list = []
+
+        if state != 2:
+            self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
+            return
+
+        target = DataBase.AllScriptableObject
+
+        sender = self.sender()
+        for key, cb in self.checkBoxList.items():
+            if cb is not sender:
+                cb.blockSignals(True)
+                cb.setChecked(False)
+                cb.blockSignals(False)
+                continue
+
+            if (data := target.get(key)) is None:
+                continue
+
+            ref_list.extend(data)
+            self.comboBox.addItems(data)
+        self.m_completer.setModel(QStringListModel(ref_list, self.m_completer))
 
     @log_exception(True)
     def on_Choosed(self, name):

@@ -477,7 +477,8 @@ class ItemGUI(QWidget, Ui_Item):
                     child_key += 1
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid,
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
+                                                             self.guid,
                                                              item.key(), child_key)
                 self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
@@ -653,7 +654,8 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.deleteItem(srcIndex)
                 data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid)
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
+                                                             self.guid)
                 self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                 return
 
@@ -677,15 +679,20 @@ class ItemGUI(QWidget, Ui_Item):
                     return
         elif item.field() in DataBase.RefNameList:
             self.model.addRefWarp(index, data)
+
         elif item.field() == "ScriptableObject":
-            if data in DataBase.AllScriptableObject:
-                self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
-            else:
-                reply = QMessageBox.question(self, self.tr('Warning'), self.tr(
-                    'Add an object that does not belong to this Mod (possibly a Tag)?'),
-                                             QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
+            if (t := resolve_ref_type(data)) is None:
+                QMessageBox.warning(self, self.tr('Warning'), self.tr('Unspecified type, should be "Type|DataKey"'))
+            elif (d := DataBase.AllScriptableObject.get(t)) is None:
+                reply = QMessageBox.question(self, self.tr('Information'),
+                                             self.tr(f'Type {t} not found, still reference?'),
+                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
                     self.model.addRefWarp(index, data)
+            elif (v := d.get(data)) is None:
+                self.model.addRefWarp(index, data)
+            else:
+                self.model.addRefWarp(index, v)
             return
 
     @log_exception(True)

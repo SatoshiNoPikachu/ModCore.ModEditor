@@ -7,6 +7,8 @@ import os
 import copy
 import time
 from glob import glob
+
+from utils import *
 from MyLogger import *
 
 
@@ -80,10 +82,13 @@ class DataBase(object):
     AllPath = {}  # DataBase.AllPath["GameStat"][Ref] -> FilePath
     AllPathPlain = {}  # DataBase.AllPathPlain[Ref] -> FilePath
     AllScriptableObject = {}  # DataBase.AllScriptableObject[Ref] -> Guid or Ref
+    AllScriptableObjectRev = {}
     AllCollection = {}  # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllListCollection = {}  # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
     AllNotes = {}  # DataBase.AllNotes["CardData"]["CardName"] -> Note
     AllBaseJsonData = {}  # DataBase.AllBaseJsonData["CardData"] -> base json data
+
+    AllScriptableObjectBase = {}
 
     AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
@@ -147,6 +152,7 @@ class DataBase(object):
         DataBase.AllCardData = {}
         DataBase.AllPath = {}
         DataBase.AllScriptableObject = {}
+        DataBase.AllScriptableObjectRev = {}
 
         DataBase.AllRef.update(copy.deepcopy(DataBase.AllRefBase))
         DataBase.AllGuid.update(copy.deepcopy(DataBase.AllGuidBase))
@@ -216,19 +222,22 @@ class DataBase(object):
                     if guid is None or guid == "":
                         continue
                     ref = f'{mod_name}:{file_name[:-5]}'
+                    ref_so = f'{p}|{ref}'
                     if p == "CardData":
                         DataBase.AllRef[p]["Mod"].append(ref)
                         DataBase.AllGuid[p].update({ref: guid})
                         DataBase.AllGuidPlain.update({ref: guid})
                         DataBase.AllCardData.update({ref: guid})
                         DataBase.AllPath[p].update({ref: file})
-                        DataBase.AllScriptableObject.update({ref: guid})
+                        DataBase.AllScriptableObject.setdefault(p, {})
+                        DataBase.AllScriptableObject[p].update({ref_so: remove_postfix(ref_so)})
                     else:
                         DataBase.AllRef[p].append(ref)
                         DataBase.AllGuid[p].update({ref: guid})
                         DataBase.AllGuidPlain.update({ref: guid})
                         DataBase.AllPath[p].update({ref: file})
-                        DataBase.AllScriptableObject.update({ref: guid})
+                        DataBase.AllScriptableObject.setdefault(p, {})
+                        DataBase.AllScriptableObject[p].update({ref_so: remove_postfix(ref_so)})
             # elif p == "GameSourceModify":
             #     pass
             elif p == "ScriptableObject":
@@ -245,7 +254,10 @@ class DataBase(object):
                             ref = f'{mod_name}:{file_name[:-5]}'
                             DataBase.AllRef[sub_dir].append(ref)
                             DataBase.AllPath[sub_dir].update({ref: file})
-                            DataBase.AllScriptableObject.update({ref: ref})
+
+                            ref_so = f'{sub_dir}|{ref}'
+                            DataBase.AllScriptableObject.setdefault(sub_dir, {})
+                            DataBase.AllScriptableObject[sub_dir].update({ref_so: ref_so})
 
         DataBase.load_work_ml(path_root)
         DataBase.load_mods_work_dir()
@@ -254,6 +266,8 @@ class DataBase(object):
             DataBase.AllPathPlain.update(copy.deepcopy(DataBase.AllPath[key]))
 
         DataBase.AllGuidPlainRev = {v: k for k, v in DataBase.AllGuidPlain.items()}
+        DataBase.AllScriptableObjectRev = {t: {v: k for k, v in d.items()} for t, d in
+                                           DataBase.AllScriptableObject.items()}
         pass
 
     @classmethod
@@ -368,7 +382,10 @@ class DataBase(object):
                 cls.AllGuid[t].update({ref: guid})
                 cls.AllGuidPlain.update({ref: guid})
                 cls.AllPath[t].update({ref: str(p)})
-                cls.AllScriptableObject.update({ref: guid})
+
+                ref_so = f'{t}|{ref}'
+                cls.AllScriptableObject.setdefault(t, {})
+                cls.AllScriptableObject[t].update({ref_so: remove_postfix(ref_so)})
 
     @classmethod
     def load_work_mod_so(cls, path: Path, prefix: str):
@@ -390,7 +407,10 @@ class DataBase(object):
                 ref = prefix + p.stem
                 cls.AllRef[t].append(ref)
                 cls.AllPath[t].update({ref: str(p)})
-                cls.AllScriptableObject.update({ref: ref})
+
+                ref_so = f'{t}|{ref}'
+                cls.AllScriptableObject.setdefault(t, {})
+                cls.AllScriptableObject[t].update({ref_so: ref_so})
 
     @classmethod
     def load_mod_audio(cls, path: Path, prefix: str):
@@ -441,8 +461,13 @@ class DataBase(object):
             with open(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/" + file, encoding='utf-8') as f:
                 temp = f.readlines()
                 temp = list(map(lambda x: x.replace("\n", ""), temp))
-                DataBase.AllRefBase[file[:-4]] = temp
-                DataBase.AllScriptableObjectBase.update({k: k for k in temp})
+                t = file[:-4]
+                DataBase.AllRefBase[t] = temp
+
+                prefix = f'{t}|'
+                DataBase.AllScriptableObjectBase.setdefault(t, {})
+                DataBase.AllScriptableObjectBase[t].update({(v := f'{prefix}{k}'): v for k in temp})
+
                 if file[:-4] == "CardTabGroup":
                     for item in temp:
                         if item.startswith("Tab_"):
@@ -469,10 +494,14 @@ class DataBase(object):
                 continue
             with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
                 temp = json.loads(f.read(-1))
-                DataBase.AllRefBase[file[:-5]] = list(temp.keys())
-                DataBase.AllGuidBase[file[:-5]] = temp
+                t = file[:-5]
+
+                DataBase.AllRefBase[t] = list(temp.keys())
+                DataBase.AllGuidBase[t] = temp
                 DataBase.AllGuidPlainBase.update(temp)
-                DataBase.AllScriptableObjectBase.update(temp)
+
+                DataBase.AllScriptableObjectBase.setdefault(t, {})
+                DataBase.AllScriptableObjectBase[t].update({(v := f'{t}|{k}'): remove_postfix(v) for k in temp})
 
         DataBase.AllRefBase["CardData"] = {}
         DataBase.AllGuidBase["CardData"] = {}
@@ -486,37 +515,40 @@ class DataBase(object):
                 DataBase.AllGuidBase["CardData"][file[:-5]] = temp
                 DataBase.AllRefBase["CardData"][file[:-5]] = list(temp.keys())
                 DataBase.AllGuidPlainBase.update(temp)
-                DataBase.AllScriptableObjectBase.update(temp)
 
-        try:
-            for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
-                if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir):
-                    for file in os.listdir(
-                            DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
-                        if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
-                            with open(
-                                    DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file,
-                                    encoding='utf-8') as f:
-                                temp = json.loads(f.read(-1))
-                                DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
-                                DataBase.AllGuidBase[file[:-5]].update(temp)
-                                DataBase.AllGuidPlainBase.update(temp)
-                                DataBase.AllScriptableObjectBase.update(temp)
+                aso = DataBase.AllScriptableObjectBase
+                aso.setdefault('CardData', {})
+                aso['CardData'].update({(v := f'CardData|{k}'): remove_postfix(v) for k in temp})
 
-                    for file in os.listdir(
-                            DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
-                        if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
-                            with open(
-                                    DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file,
-                                    encoding='utf-8') as f:
-                                temp = json.loads(f.read(-1))
-                                DataBase.AllCardDataBase.update(temp)
-                                DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
-                                DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
-                                DataBase.AllGuidPlainBase.update(temp)
-                                DataBase.AllScriptableObjectBase.update(temp)
-        except Exception as ex:
-            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+        # try:
+        #     for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
+        #         if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir):
+        #             for file in os.listdir(
+        #                     DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
+        #                 if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
+        #                     with open(
+        #                             DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file,
+        #                             encoding='utf-8') as f:
+        #                         temp = json.loads(f.read(-1))
+        #                         DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
+        #                         DataBase.AllGuidBase[file[:-5]].update(temp)
+        #                         DataBase.AllGuidPlainBase.update(temp)
+        #                         DataBase.AllScriptableObjectBase.update(temp)
+        #
+        #             for file in os.listdir(
+        #                     DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
+        #                 if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
+        #                     with open(
+        #                             DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file,
+        #                             encoding='utf-8') as f:
+        #                         temp = json.loads(f.read(-1))
+        #                         DataBase.AllCardDataBase.update(temp)
+        #                         DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
+        #                         DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
+        #                         DataBase.AllGuidPlainBase.update(temp)
+        #                         DataBase.AllScriptableObjectBase.update(temp)
+        # except Exception as ex:
+        #     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     @staticmethod
     def loadPath():

@@ -1,6 +1,3 @@
-from DataBase import DataBase
-
-
 def remove_postfix(text: str) -> str:
     if not text.endswith(')'):
         return text
@@ -11,6 +8,7 @@ def remove_postfix(text: str) -> str:
 
 
 def is_uid_type(type_name: str) -> bool:
+    from DataBase import DataBase
     return type_name in DataBase.AllGuid
 
 
@@ -38,3 +36,10 @@ def resolve_data_key(key: str):
     if i == -1:
         return '', key
     return key[:i], key[i + 1:]
+
+
+def resolve_ref_type(key: str) -> str | None:
+    i = key.find('|')
+    if i == -1:
+        return None
+    return key[:i]

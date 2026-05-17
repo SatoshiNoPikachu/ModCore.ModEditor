@@ -249,8 +249,18 @@ class ModifyItemGUI(ItemGUI):
             self.addWarpItem(index, "Ref", data)
             # self.model.addRefWarp(index, data)
         elif item.field() == "ScriptableObject":
-            self.addWarpItem(index, "Ref", DataBase.AllScriptableObject[data])
-            # self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
+            if (t := resolve_ref_type(data)) is None:
+                QMessageBox.warning(self, self.tr('Warning'), self.tr('Unspecified type, should be "Type|DataKey"'))
+            elif (d := DataBase.AllScriptableObject.get(t)) is None:
+                reply = QMessageBox.question(self, self.tr('Information'),
+                                             self.tr(f'Type {t} not found, still reference?'),
+                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
+                if reply == QMessageBox.Yes:
+                    self.addWarpItem(index, 'Ref', data)
+            elif (v := d.get(data)) is None:
+                self.addWarpItem(index, 'Ref', data)
+            else:
+                self.addWarpItem(index, 'Ref', v)
             return
 
     @log_exception(True)
