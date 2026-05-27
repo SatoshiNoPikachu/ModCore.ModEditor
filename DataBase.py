@@ -64,6 +64,7 @@ class DataBase(object):
                            "GameStat": ["VisibleGameStatStatListTab"],
                            "CardTabGroup": ["BlueprintCardDataCardTabGroup"],
                            "PlayerCharacter": ["PlayerCharacterJournalName"]}
+    AllMetaField = {"$matchTargets": "SpecialWarp"}
 
     AllBlueprintTab = []
     AllBlueprintSubTab = []

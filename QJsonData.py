@@ -183,7 +183,7 @@ class QJsonTreeItem(object):
                 rootItem.IsOverride = True
             rootItem.setKey(itemKey)
 
-        if itemField in DataBase.AllTypeField or itemField in DataBase.AllEnum:
+        if itemField in DataBase.AllTypeField or itemField in DataBase.AllEnum or itemField == 'SpecialWarp':
             rootItem.setField(itemField)
 
         jsonType = None
@@ -252,10 +252,14 @@ class QJsonTreeItem(object):
             for key in value:
                 v = value[key]
                 if itemField in DataBase.AllTypeField:
-                    if key in DataBase.AllTypeField[itemField]:
-                        child = QJsonTreeItem.load(v, DataBase.AllTypeField[itemField][key], rootItem, key, is_modify,
+                    child_field = DataBase.AllTypeField[itemField].get(key)
+                    if child_field is None and key.startswith('$'):
+                        child_field = DataBase.AllMetaField.get(key)
+
+                    if child_field is not None:
+                        child = QJsonTreeItem.load(v, child_field, rootItem, key, is_modify,
                                                    not_new_obj)
-                        child.setField(DataBase.AllTypeField[itemField][key])
+                        # child.setField(DataBase.AllTypeField[itemField][key])
                         if itemField in DataBase.AllNotes:
                             if key in DataBase.AllNotes[itemField]:
                                 child.setNote(DataBase.AllNotes[itemField][key])

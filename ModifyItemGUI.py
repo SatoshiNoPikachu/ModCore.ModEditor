@@ -31,6 +31,29 @@ class ModifyItemGUI(ItemGUI):
             cardTypeButton.clicked.connect(self.on_cardTypeButton)
             self.horizontalLayout.insertWidget(3, cardTypeButton)
 
+        target_btn = QPushButton(self.tr("Add Target"), self)
+        target_btn.clicked.connect(self.on_target_btn)
+        self.horizontalLayout.insertWidget(4, target_btn)
+
+    @log_exception(True)
+    def on_target_btn(self, checked: bool = False) -> None:
+        select = SelectGUI(self.treeView, field_name=self.field, type=SelectGUI.Ref)
+        select.exec_()
+
+        if not select.write_flag or not (text := remove_postfix(select.lineEdit.text())):
+            return
+
+        if "$matchTargets" in self.model.mRootItem.mChilds:
+            item_index = self.model.index(self.model.mRootItem.childRow("$matchTargets"), 0, QModelIndex())
+            child_key = 0
+            while str(child_key) in item_index.internalPointer().mChilds:
+                child_key += 1
+            self.model.addItem(item_index, str(child_key), str, text, "SpecialWarp", True)
+        else:
+            self.model.addItem(QModelIndex(), "$matchTargets", list, "", "SpecialWarp", True)
+            item_index = self.model.index(self.model.mRootItem.childRow("$matchTargets"), 0, QModelIndex())
+            self.model.addItem(item_index, "0", str, text, "SpecialWarp", True)
+
     @log_exception(True)
     def on_cardTagButton(self, checked: bool = False) -> None:
         select = SelectGUI(self.treeView, field_name="CardTag", type=SelectGUI.Ref)
@@ -215,7 +238,8 @@ class ModifyItemGUI(ItemGUI):
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid,
+                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
+                                                             self.guid,
                                                              item.key(), i)
                 self.addWarpItem(index, "Collection", data)
 
