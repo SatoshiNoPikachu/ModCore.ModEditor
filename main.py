@@ -1,4 +1,29 @@
 # -*- coding: utf-8 -*-
+import os
+import configparser
+from pathlib import Path
+
+
+def apply_scale():
+    p = Path(os.getcwd()) / 'config_mc.ini'
+    if not p.exists():
+        return
+
+    config = configparser.ConfigParser()
+    config.read(p)
+
+    if not config.has_option("Config", "FactorApplicationScale"):
+        return
+
+    scale = config.get("Config", "FactorApplicationScale")
+    if not scale:
+        return
+
+    os.environ["QT_SCALE_FACTOR"] = scale
+
+
+apply_scale()
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -9,12 +34,10 @@ from Ui_Main import *
 
 import traceback
 import sys
-import os
 import shutil
 import ujson as json
 import uuid
 import time
-import configparser
 # import anytree
 from MyLogger import *
 from DataBase import *
@@ -24,7 +47,6 @@ import ModifyItemGUI
 import SelectGUI
 import ExportToZip
 from glob import glob
-from pathlib import Path
 
 # from functools import partial
 
@@ -968,6 +990,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
 
 if __name__ == '__main__':
+    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
+
     QTextCodec.setCodecForLocale(QTextCodec.codecForName("UTF-8"))
     app = QApplication(sys.argv)
     main = ModEditorGUI()
