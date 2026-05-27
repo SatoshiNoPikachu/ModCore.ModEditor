@@ -226,7 +226,9 @@ class QJsonTreeItem(object):
                         value[key] = 0
 
             # process the key/value pairs
-            if re.search(pattern_number, str(value)):
+            if rootItem.IsOverride:
+                rootItem.setVaild(True)
+            elif re.search(pattern_number, str(value)):
                 if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
@@ -289,7 +291,7 @@ class QJsonTreeItem(object):
 
         elif isinstance(value, list):
             rootItem.setType(list)
-            if len(value) > 0:
+            if len(value) > 0 or rootItem.IsOverride:
                 if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
@@ -302,7 +304,7 @@ class QJsonTreeItem(object):
                 child.setField(itemField)
                 rootItem.appendChild(str(i), child)
         else:
-            if value:
+            if value or rootItem.IsOverride:
                 if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
