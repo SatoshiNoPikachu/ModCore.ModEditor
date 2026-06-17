@@ -798,7 +798,7 @@ class DataBase(object):
         if p.name == "Data":
             p = p.parent
         p = p / f"Resource/Localization/{DataBase.LocalizationFileName}"
-        if not p.exists():
+        if not p.parent.exists():
             return
 
         prefix = f'{DataBase.CurModName}_'
