@@ -2,12 +2,11 @@
 
 from pathlib import Path
 import ujson as json
-import sys
 import os
 import copy
-import time
 from glob import glob
 
+from DataPack import DataPack
 from utils import *
 from MyLogger import *
 
@@ -111,6 +110,8 @@ class DataBase(object):
 
         if not os.path.exists(DataBase.DataDir + "/Mods"):
             os.mkdir(DataBase.DataDir + "/Mods")
+
+        DataPack.load_packs(data_dir)
 
         # Load Name
         DataBase.loadName()
@@ -521,36 +522,6 @@ class DataBase(object):
                 aso.setdefault('CardData', {})
                 aso['CardData'].update({(v := f'CardData|{k}'): remove_postfix(v) for k in temp})
 
-        # try:
-        #     for mod_ref_dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/"):
-        #         if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir):
-        #             for file in os.listdir(
-        #                     DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/"):
-        #                 if file.endswith(".json") and file[:-5] in DataBase.AllRefBase:
-        #                     with open(
-        #                             DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/" + file,
-        #                             encoding='utf-8') as f:
-        #                         temp = json.loads(f.read(-1))
-        #                         DataBase.AllRefBase[file[:-5]].extend(list(temp.keys()))
-        #                         DataBase.AllGuidBase[file[:-5]].update(temp)
-        #                         DataBase.AllGuidPlainBase.update(temp)
-        #                         DataBase.AllScriptableObjectBase.update(temp)
-        #
-        #             for file in os.listdir(
-        #                     DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/"):
-        #                 if file.endswith(".json") and file[:-5] in DataBase.AllGuidBase["CardData"]:
-        #                     with open(
-        #                             DataBase.DataDir + r"/CSTI-JsonData/ModReference/" + mod_ref_dir + r"/UniqueIDScriptableGUID/CardData/" + file,
-        #                             encoding='utf-8') as f:
-        #                         temp = json.loads(f.read(-1))
-        #                         DataBase.AllCardDataBase.update(temp)
-        #                         DataBase.AllGuidBase["CardData"][file[:-5]].update(temp)
-        #                         DataBase.AllRefBase["CardData"][file[:-5]].extend(temp.keys())
-        #                         DataBase.AllGuidPlainBase.update(temp)
-        #                         DataBase.AllScriptableObjectBase.update(temp)
-        # except Exception as ex:
-        #     QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-
     @staticmethod
     def loadPath():
         DataBase.AllPathBase = {}  # Type: {Key: Path}
@@ -878,19 +849,3 @@ class DataBase(object):
                             QtCore.qWarning(bytes("Wrong Format Key" + line, encoding="utf-8"))
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-
-    # def loadTemplate():
-    #     DataBase.AllTemplateBase = {}
-    #     base_path = DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableJsonDataWithWarpLitAllInOne/"
-    #     for dir in os.listdir(base_path):
-    #         if os.path.isdir(base_path + r"/" + dir):
-    #             if dir == "CardData":
-    #                 for sub_dir in os.listdir(base_path + dir):
-    #                     if os.path.isdir(base_path + r"/" + dir + r"/" + sub_dir):
-    #                         for file in os.listdir(base_path + dir + r"/" + sub_dir):
-    #                             if file.endswith(".json"):
-    #                                 json.load(open(base_path + dir + r"/" + sub_dir + r"/" + file, "r", encoding='utf-8'))
-    #             else:
-    #                 for file in os.listdir(base_path + dir):
-    #                     if file.endswith(".json"):
-    #                         json.load(open(base_path + dir + r"/" + file, "r", encoding='utf-8'))
