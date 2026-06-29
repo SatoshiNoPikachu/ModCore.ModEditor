@@ -1,5 +1,6 @@
 *.code-workspace
 CSTI-JsonData/
+DataPackage/
 __pycache__/
 backup/
 build/
