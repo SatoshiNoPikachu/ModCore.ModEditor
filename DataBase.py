@@ -1,10 +1,12 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+
+from pathlib import Path
 import ujson as json
-import sys
 import os
 import copy
-import time
 from glob import glob
+
+from DataPack import DataPack
 from MyLogger import *
 
 
@@ -43,14 +45,15 @@ def delete_keys_from_dict(src_dict, key: str):
             delete_keys_from_dict(src_dict[field], key)
 
 
-class DataBase(object):
+class DataBase(DataPack):
     DataDir = None
-    RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
-    # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
-    SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject"]
+    # RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
+    # # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
+    # RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
+    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
+    # SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
+    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject",
+    #                "DataObjectModify"]
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -59,15 +62,6 @@ class DataBase(object):
                            "GameStat": ["VisibleGameStatStatListTab"],
                            "CardTabGroup": ["BlueprintCardDataCardTabGroup"],
                            "PlayerCharacter": ["PlayerCharacterJournalName"]}
-
-    AllBlueprintTab = []
-    AllBlueprintSubTab = []
-    AllItemTabGpGroup = []
-    AllCardFilterGroup = []
-
-    AllEnum = {}
-    AllEnumRev = {}
-    AllTypeField = {}
 
     AllRef = {}  # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[RefTrans]
     AllGuid = {}  # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][RefTrans] -> Guid
@@ -79,13 +73,13 @@ class DataBase(object):
     AllScriptableObject = {}  # DataBase.AllScriptableObject[Ref] -> Guid or Ref
     AllCollection = {}  # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllListCollection = {}  # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
-    AllNotes = {}  # DataBase.AllNotes["CardData"]["CardName"] -> Note
-    AllBaseJsonData = {}  # DataBase.AllBaseJsonData["CardData"] -> base json data
 
     AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
 
     AutoCompleteUpdate = False
+
+    EnableKeyAlias = True
 
     def __init__(self):
         pass
@@ -97,32 +91,13 @@ class DataBase(object):
         if not os.path.exists(DataBase.DataDir + "/Mods"):
             os.mkdir(DataBase.DataDir + "/Mods")
 
-        # Load Name
-        DataBase.loadName()
-
-        # Load GUID
-        DataBase.loadGuid()
-
-        # Load Path
-        DataBase.loadPath()
-
-        # Load Base Json
-        DataBase.loadBaseJson()
-
-        # Load ScriptableObject FieldName FieldType
-        DataBase.loadScriptableObjectField()
-
-        # Load Template
-        # DataBase.loadTemplate()
+        DataBase.load_packs(data_dir)
 
         # Load SpecialTypeField
         DataBase.loadSpecialTypeField()
 
         # Load Collection
         DataBase.loadCollection()
-
-        # Load Note
-        DataBase.loadNote(lan)
 
         # Load GameSimpCn
         DataBase.loadGameSimpCn()

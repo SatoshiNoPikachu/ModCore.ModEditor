@@ -30,6 +30,9 @@ class QJsonTreeItem(object):
         self.mStatus = "Normal"
         self.mCustomNote = ""
 
+        self.comment = None
+        self.display_key = None
+
     def appendChild(self, key, item):
         self.mChilds[key] = item
 
@@ -89,6 +92,7 @@ class QJsonTreeItem(object):
 
     def setKey(self, key: str):
         self.mKey = key
+        self.display_key = key
 
     def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
@@ -242,6 +246,16 @@ class QJsonTreeItem(object):
                         if itemField in DataBase.AllNotes:
                             if key in DataBase.AllNotes[itemField]:
                                 child.setNote(DataBase.AllNotes[itemField][key])
+
+                        comment = DataBase.get_comment(itemField, key)
+                        if comment:
+                            child.comment = comment
+
+                        if DataBase.EnableKeyAlias:
+                            alias = DataBase.get_alias(itemField, key)
+                            if alias:
+                                child.display_key = f'{key}({alias})'
+
                     elif key.endswith("WarpData") and key[:-8] + "WarpType" in value and (
                             value[key[:-8] + "WarpType"] == 4 or value[key[:-8] + "WarpType"] == 5):
                         if key[:-8] in DataBase.AllTypeField[itemField]:
@@ -876,7 +890,7 @@ class QJsonModel(QAbstractItemModel):
 
         if role == Qt.DisplayRole:
             if col == 0:
-                return str(item.key())
+                return item.display_key
             elif col == 1:
                 if item.type() == "dict" or item.type() == "list":
                     return ""
@@ -907,6 +921,10 @@ class QJsonModel(QAbstractItemModel):
                 return item.customNote()
             elif col == 7:
                 return item.status()
+
+        if role == Qt.ToolTipRole and col == 0:
+            return item.comment
+
         return QVariant()
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):

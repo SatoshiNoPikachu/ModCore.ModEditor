@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -97,6 +97,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             DataBase.AutoCompleteUpdate = False
             self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
+            self.save_config()
+
+        if self.config.has_option('Config', "EnableKeyAlias"):
+            DataBase.EnableKeyAlias = self.config.getboolean("Config", "EnableKeyAlias")
+        else:
+            self.config.set("Config", "EnableKeyAlias", "True")
             self.save_config()
 
     @log_exception(True)
@@ -754,7 +760,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if os.path.exists(QDir.currentPath() + r"/Mods/" + mod_name):
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Mod folder with the same name exists'))
             return
-        shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseMod", QDir.currentPath() + r"/Mods/" + mod_name)
+        shutil.copytree(DataBase.MainPack.path / 'BaseMod-ML', QDir.currentPath() + r"/Mods/" + mod_name)
         self.loadMod(QDir.currentPath() + r"/Mods/" + mod_name)
 
     @log_exception(True)
