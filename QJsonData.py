@@ -31,6 +31,8 @@ class QJsonTreeItem(object):
         self.mCustomNote = ""
 
         self.IsOverride = False
+        self.comment = None
+        self.display_key = None
 
     def appendChild(self, key, item):
         self.mChilds[key] = item
@@ -91,6 +93,7 @@ class QJsonTreeItem(object):
 
     def setKey(self, key: str):
         self.mKey = key
+        self.display_key = key
 
     def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
@@ -262,9 +265,20 @@ class QJsonTreeItem(object):
                         child = QJsonTreeItem.load(v, child_field, rootItem, key, is_modify,
                                                    not_new_obj)
                         # child.setField(DataBase.AllTypeField[itemField][key])
+
                         if itemField in DataBase.AllNotes:
                             if key in DataBase.AllNotes[itemField]:
                                 child.setNote(DataBase.AllNotes[itemField][key])
+
+                        comment = DataBase.get_comment(itemField, key)
+                        if comment:
+                            child.comment = comment
+
+                        if DataBase.EnableKeyAlias:
+                            alias = DataBase.get_alias(itemField, key)
+                            if alias:
+                                child.display_key = f'{key}({alias})'
+
                     elif key.endswith("WarpData") and key[:-8] + "WarpType" in value and (
                             value[key[:-8] + "WarpType"] == 4 or value[key[:-8] + "WarpType"] == 5):
                         if key[:-8] in DataBase.AllTypeField[itemField]:
@@ -279,7 +293,7 @@ class QJsonTreeItem(object):
                 else:
                     child = QJsonTreeItem.load(v, "", rootItem, key, is_modify, not_new_obj)
                     child.setStatus("Deprecated")
-                child.setKey(key)
+                # child.setKey(key)
                 try:
                     child.setType(v.type())
                 except AttributeError:
@@ -298,8 +312,8 @@ class QJsonTreeItem(object):
 
             # process the values in the list
             for i, v in enumerate(value):
-                child = QJsonTreeItem.load(v, itemField, rootItem, rootItem.mKey, is_modify, not_new_obj)
-                child.setKey(str(i))
+                child = QJsonTreeItem.load(v, itemField, rootItem, str(i), is_modify, not_new_obj)
+                # child.setKey(str(i))
                 child.setType(v.__class__)
                 child.setField(itemField)
                 rootItem.appendChild(str(i), child)
@@ -929,7 +943,7 @@ class QJsonModel(QAbstractItemModel):
 
         if role == Qt.DisplayRole:
             if col == 0:
-                return str(item.key())
+                return item.display_key
             elif col == 1:
                 if item.type() == "dict" or item.type() == "list":
                     return ""
@@ -967,6 +981,10 @@ class QJsonModel(QAbstractItemModel):
                 return item.customNote()
             elif col == 7:
                 return item.status()
+
+        if role == Qt.ToolTipRole and col == 0:
+            return item.comment
+
         return QVariant()
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = ...):

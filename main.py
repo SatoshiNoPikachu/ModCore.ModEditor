@@ -136,6 +136,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "ModsWorkDir", "Mods")
             self.save_config()
 
+        if self.config.has_option('Config', "EnableKeyAlias"):
+            DataBase.EnableKeyAlias = self.config.getboolean("Config", "EnableKeyAlias")
+        else:
+            self.config.set("Config", "EnableKeyAlias", "True")
+            self.save_config()
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
@@ -890,7 +896,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if os.path.exists(QDir.currentPath() + r"/Mods/" + mod_name):
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Mod folder with the same name exists'))
             return
-        shutil.copytree(QDir.currentPath() + r"/CSTI-JsonData/BaseModMC", QDir.currentPath() + r"/Mods/" + mod_name)
+        shutil.copytree(DataBase.MainPack.path / 'BaseMod', QDir.currentPath() + r"/Mods/" + mod_name)
         self.load_mod(QDir.currentPath() + r"/Mods/" + mod_name)
 
     @log_exception(True)

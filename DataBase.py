@@ -46,15 +46,15 @@ def delete_keys_from_dict(src_dict, key: str):
             delete_keys_from_dict(src_dict[field], key)
 
 
-class DataBase(object):
+class DataBase(DataPack):
     DataDir = None
-    RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
-    # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
-    SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-                   "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject",
-                   "DataObjectModify"]
+    # RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
+    # # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
+    # RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
+    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
+    # SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
+    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject",
+    #                "DataObjectModify"]
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -70,10 +70,6 @@ class DataBase(object):
     AllItemTabGpGroup = []
     AllCardFilterGroup = []
 
-    AllEnum = {}
-    AllEnumRev = {}
-    AllTypeField = {}
-
     AllRef = {}  # DataBase.AllRef["ActionTag"] -> list[Ref]              DataBase.AllRef["CardData"]["Item"] -> list[RefTrans]
     AllGuid = {}  # DataBase.AllGuid["GameStat"][Ref] -> Guid              DataBase.AllGuid["CardData"]["Item"][RefTrans] -> Guid
     AllGuidPlain = {}  # DataBase.AllGuidPlain[RefTrans/Ref] -> Guid
@@ -85,10 +81,6 @@ class DataBase(object):
     AllScriptableObjectRev = {}
     AllCollection = {}  # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllListCollection = {}  # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
-    AllNotes = {}  # DataBase.AllNotes["CardData"]["CardName"] -> Note
-    AllBaseJsonData = {}  # DataBase.AllBaseJsonData["CardData"] -> base json data
-
-    AllScriptableObjectBase = {}
 
     AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
@@ -101,44 +93,26 @@ class DataBase(object):
 
     ModsWorkDir = ""
 
+    EnableKeyAlias = True
+
     def __init__(self):
         pass
 
     @staticmethod
     def loadDataBase(data_dir: str, lan: str):
         DataBase.DataDir = data_dir
+        DataBase.Language = lan
 
         if not os.path.exists(DataBase.DataDir + "/Mods"):
             os.mkdir(DataBase.DataDir + "/Mods")
 
-        DataPack.load_packs(data_dir)
-
-        # Load Name
-        DataBase.loadName()
-
-        # Load GUID
-        DataBase.loadGuid()
-
-        # Load Path
-        DataBase.loadPath()
-
-        # Load Base Json
-        DataBase.loadBaseJson()
-
-        # Load ScriptableObject FieldName FieldType
-        DataBase.loadScriptableObjectField()
-
-        # Load Template
-        # DataBase.loadTemplate()
+        DataBase.load_packs(data_dir)
 
         # Load SpecialTypeField
         DataBase.loadSpecialTypeField()
 
         # Load Collection
         DataBase.loadCollection()
-
-        # Load Note
-        DataBase.loadNote(lan)
 
         # Load GameSimpCn
         DataBase.loadGameSimpCn()
@@ -824,28 +798,31 @@ class DataBase(object):
     @staticmethod
     def loadGameSimpCn():
         try:
-            if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/SimpCn.csv'):
-                with open(DataBase.DataDir + r'/CSTI-JsonData/SimpCn.csv', "r", encoding='utf-8') as f:
-                    lines = f.readlines(-1)
-                    for line in lines:
-                        keys = line.split(',')
-                        if len(keys) > 3 and line.find('"') != -1:
-                            new_keys = line.split('"')
-                            if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                                if new_keys[0][:-1] not in DataBase.AllSimpCn:
-                                    DataBase.AllSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"', ''),
-                                                                            "translate": new_keys[2][1:].replace("\n",
-                                                                                                                 "")}
-                                else:
-                                    DataBase.AllSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n",
-                                                                                                                "")
-                        elif len(keys) == 3:
-                            if keys[0] not in DataBase.AllSimpCn:
-                                DataBase.AllSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
-                                                               "translate": keys[2].replace("\n", "")}
+            p = DataBase.MainPack.path / 'SimpCn.csv'
+            if not p.exists():
+                return
+
+            with p.open('r', encoding='utf-8') as f:
+                lines = f.readlines(-1)
+                for line in lines:
+                    keys = line.split(',')
+                    if len(keys) > 3 and line.find('"') != -1:
+                        new_keys = line.split('"')
+                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
+                            if new_keys[0][:-1] not in DataBase.AllSimpCn:
+                                DataBase.AllSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"', ''),
+                                                                        "translate": new_keys[2][1:].replace("\n",
+                                                                                                             "")}
                             else:
-                                DataBase.AllSimpCn[keys[0]]["translate"] = keys[2].replace("\n", "")
+                                DataBase.AllSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n",
+                                                                                                            "")
+                    elif len(keys) == 3:
+                        if keys[0] not in DataBase.AllSimpCn:
+                            DataBase.AllSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
+                                                           "translate": keys[2].replace("\n", "")}
                         else:
-                            QtCore.qWarning(bytes("Wrong Format Key" + line, encoding="utf-8"))
+                            DataBase.AllSimpCn[keys[0]]["translate"] = keys[2].replace("\n", "")
+                    else:
+                        QtCore.qWarning(bytes("Wrong Format Key" + line, encoding="utf-8"))
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
