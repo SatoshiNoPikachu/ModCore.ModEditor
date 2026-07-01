@@ -26,6 +26,7 @@ class SelectGUI(QDialog, Ui_Select):
         self.auto_replace_key_guid = auto_replace_key_guid
         self.modify_type = None
         self.setWindowTitle(self.tr("Add ") + field_name + self.tr(" Reference Type"))
+        self.use_def = False
 
         if type == SelectGUI.NewData:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Template"))
@@ -39,6 +40,8 @@ class SelectGUI(QDialog, Ui_Select):
             else:
                 self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(
                     self.tr("No Replace LocalizationKey"))
+            self.buttonBox.addButton(QDialogButtonBox.StandardButton.Yes).setText(
+                self.tr("Use Default Template"))
 
         if type == SelectGUI.NewModify:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
@@ -204,6 +207,13 @@ class SelectGUI(QDialog, Ui_Select):
     def on_accepted(self, button: QAbstractButton):
         if button == self.buttonBox.button(QDialogButtonBox.Ok):
             self.write_flag = True
+            return
+
+        if button == self.buttonBox.button(QDialogButtonBox.Yes):
+            self.write_flag = True
+            self.use_def = True
+            return
+
         if button == self.buttonBox.button(QDialogButtonBox.YesToAll):
             self.write_flag = True
             self.auto_replace_key_guid = not self.auto_replace_key_guid
