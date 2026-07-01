@@ -50,7 +50,7 @@ from glob import glob
 
 # from functools import partial
 
-ModEditorVersion = "1.1.0-rc.1"
+ModEditorVersion = "1.1.0-rc.2"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
