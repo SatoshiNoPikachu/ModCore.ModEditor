@@ -446,9 +446,8 @@ class reversor:
 class QJsonProxyModel(QSortFilterProxyModel):
     def __init__(self, parent=None):
         super(QJsonProxyModel, self).__init__(parent)
-        self.vaildFilter = QRegExp("True")
-        self.keyFilter = QRegExp("")
-        self.keyFilter.setCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.validFilter = True
+        self.keyFilter = QRegularExpression('', QRegularExpression.CaseInsensitiveOption)
 
     def getSourceModelItemIndex(self, index: QModelIndex):
         srcIndex = self.mapToSource(index)
@@ -458,19 +457,14 @@ class QJsonProxyModel(QSortFilterProxyModel):
 
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         item = self.sourceModel().index(source_row, 0, source_parent).internalPointer()
-        if item.depth() == 1:
-            if self.keyFilter.indexIn(str(item.key())) != -1 and self.vaildFilter.indexIn(str(item.vaild())) != -1:
-                return True
-        else:
-            if self.vaildFilter.indexIn(str(item.vaild())) != -1:
-                return True
-        return False
 
-    def setVaildFilter(self, vaild: bool):
-        if vaild:
-            self.vaildFilter.setPattern("True")
-        else:
-            self.vaildFilter.setPattern("")
+        if self.validFilter and not item.vaild():
+            return False
+
+        return item.depth() != 1 or self.keyFilter.match(item.display_key).hasMatch()
+
+    def setVaildFilter(self, valid: bool):
+        self.validFilter = valid
         self.invalidateFilter()
 
     def setKeyFilter(self, match: str):
