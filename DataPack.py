@@ -155,7 +155,7 @@ class DataPack:
             return
 
         for p in dir_guid.iterdir():
-            if p.is_file() and p.suffix != '.json':
+            if p.is_file() and p.suffix == '.json':
                 type_name = p.stem
                 if type_name in cls.AllRefBase:
                     continue
@@ -170,6 +170,7 @@ class DataPack:
                 cls.AllGuidBase[type_name] = data
                 cls.AllGuidPlainBase.update(data)
                 cls.AllScriptableObjectBase.update(data)
+                continue
             elif not p.is_dir() or p.name != 'CardData':
                 continue
 
