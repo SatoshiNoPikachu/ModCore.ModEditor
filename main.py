@@ -518,9 +518,31 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                                              type=SelectGUI.SelectGUI.NewData)
                 select.exec_()
                 template_key = select.lineEdit.text()
+
+                if not select.write_flag:
+                    return
+
                 try:
                     card_name = select.name_editor.text()
-                    if card_name and template_key:
+
+                    if select.use_def:
+                        if not card_name:
+                            return
+
+                        path = Path(file_path) / f'{card_name}.json'
+                        if path.exists():
+                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                            return
+
+                        data = DataBase.AllBaseJsonData.get(group_name)
+                        if data is None:
+                            QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
+                            return
+
+                        with open(path, "w", encoding='utf-8') as f:
+                            json.dump(data, f, ensure_ascii=False, indent=4)
+
+                    elif card_name and template_key:
                         card_path = file_path + "/" + card_name + ".json"
                         if not os.path.exists(card_path):
                             with open(DataBase.AllPath[group_name][template_key], "r", encoding='utf-8') as f:
@@ -555,7 +577,26 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
                     try:
                         card_name = select.name_editor.text()
-                        if card_name and template_key:
+
+                        if select.use_def:
+                            if not card_name:
+                                return
+
+                            path = Path(file_path) / f'{card_name}.json'
+                            if path.exists():
+                                QMessageBox.warning(self, self.tr("Warning"),
+                                                    self.tr('A file with the same name exists'))
+                                return
+
+                            data = DataBase.AllBaseJsonData.get(group_name)
+                            if data is None:
+                                QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
+                                return
+
+                            with open(path, "w", encoding='utf-8') as f:
+                                json.dump(data, f, ensure_ascii=False, indent=4)
+
+                        elif card_name and template_key:
                             card_path = file_path + "/" + card_name + ".json"
                             if not os.path.exists(card_path):
                                 with open(DataBase.AllPath[group_name][template_key], "r", encoding="utf-8") as f:
