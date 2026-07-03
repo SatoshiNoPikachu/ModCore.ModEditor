@@ -108,7 +108,7 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "ModEditor"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "ModEditor for ModLoader"))
         self.pushButton.setText(_translate("MainWindow", "Open"))
         self.menu.setTitle(_translate("MainWindow", "File"))
         self.menu_2.setTitle(_translate("MainWindow", "Setting"))
