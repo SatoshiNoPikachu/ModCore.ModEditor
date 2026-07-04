@@ -438,226 +438,254 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
-        if index.isValid():
-            depth = self.treeItemDepth(index)
-            file_name = self.file_model.fileName(index)
-            file_path = self.file_model.filePath(index)
-            pmenu = QMenu(self)
-            if self.file_model.isDir(index):
-                if depth == 0:
+        if not index.isValid():
+            return
+
+        depth = self.treeItemDepth(index)
+        file_name = self.file_model.fileName(index)
+        file_path = self.file_model.filePath(index)
+        pmenu = QMenu(self)
+        if self.file_model.isDir(index):
+            if depth == 0:
+                pass
+            elif depth == 1:
+                if file_name in DataBase.SupportList:
+                    if file_name == "GameSourceModify":
+                        pAddAct = QAction(self.tr("New Modify"), pmenu)
+                        pAddAct.triggered.connect(self.on_newModify)
+                        pmenu.addAction(pAddAct)
+                    elif file_name == "DataObjectModify":
+                        pAddAct = QAction(self.tr("New Modify"), pmenu)
+                        pAddAct.triggered.connect(self.on_new_data_modify)
+                        pmenu.addAction(pAddAct)
+                    elif file_name != "ScriptableObject":
+                        pAddAct = QAction(self.tr("New File"), pmenu)
+                        pAddAct.triggered.connect(self.on_new_uo)
+                        pmenu.addAction(pAddAct)
+            elif depth == 2:
+                top_parent = self.getDepthParent(index, depth=1)
+                if top_parent is None:
+                    return
+                top_name = self.file_model.fileName(top_parent)
+                if top_name == "ScriptableObject":
+                    if self.file_model.isDir(index) and file_name in DataBase.AllRef:
+                        pAddAct = QAction(self.tr("New File"), pmenu)
+                        pAddAct.triggered.connect(self.on_new_so)
+                        pmenu.addAction(pAddAct)
+                elif top_name == "GameSourceModify":
                     pass
-                elif depth == 1:
-                    if file_name in DataBase.SupportList:
-                        if file_name == "GameSourceModify":
-                            pAddAct = QAction(self.tr("New Modify"), pmenu)
-                            pAddAct.triggered.connect(self.on_newModify)
-                            pmenu.addAction(pAddAct)
-                        elif file_name == "DataObjectModify":
-                            pAddAct = QAction(self.tr("New Modify"), pmenu)
-                            pAddAct.triggered.connect(self.on_new_data_modify)
-                            pmenu.addAction(pAddAct)
-                        elif file_name != "ScriptableObject":
-                            pAddAct = QAction(self.tr("New File"), pmenu)
-                            pAddAct.triggered.connect(self.on_newCard)
-                            pmenu.addAction(pAddAct)
-                elif depth == 2:
-                    top_parent = self.getDepthParent(index, depth=1)
-                    if top_parent is None:
-                        return
-                    top_name = self.file_model.fileName(top_parent)
-                    if top_name == "ScriptableObject":
-                        if self.file_model.isDir(index) and file_name in DataBase.AllRef:
-                            pAddAct = QAction(self.tr("New File"), pmenu)
-                            pAddAct.triggered.connect(self.on_newScriptableObject)
-                            pmenu.addAction(pAddAct)
-                    elif top_name == "GameSourceModify":
+                else:
+                    pAddAct = QAction(self.tr("New File"), pmenu)
+                    pAddAct.triggered.connect(self.on_new_uo)
+                    pmenu.addAction(pAddAct)
+            else:
+                top_parent = self.getDepthParent(index, depth=1)
+                if top_parent is None:
+                    return
+                top_name = self.file_model.fileName(top_parent)
+                if top_name in DataBase.SupportList:
+                    if top_name == "GameSourceModify" or top_name == "ScriptableObject":
                         pass
                     else:
                         pAddAct = QAction(self.tr("New File"), pmenu)
-                        pAddAct.triggered.connect(self.on_newCard)
+                        pAddAct.triggered.connect(self.on_new_uo)
                         pmenu.addAction(pAddAct)
-                else:
-                    top_parent = self.getDepthParent(index, depth=1)
-                    if top_parent is None:
-                        return
-                    top_name = self.file_model.fileName(top_parent)
-                    if top_name in DataBase.SupportList:
-                        if top_name == "GameSourceModify" or top_name == "ScriptableObject":
-                            pass
-                        else:
-                            pAddAct = QAction(self.tr("New File"), pmenu)
-                            pAddAct.triggered.connect(self.on_newCard)
-                            pmenu.addAction(pAddAct)
-            if depth > 1:
-                if not self.file_model.isDir(index) and file_name.endswith(".json"):
-                    if not file_path in self.tab_item_dict:
-                        pDeleteAct = QAction(self.tr("Delete"), pmenu)
-                        pDeleteAct.triggered.connect(self.on_delCard)
-                        pmenu.addAction(pDeleteAct)
-            if len(pmenu.actions()):
-                pmenu.popup(self.sender().mapToGlobal(pos))
+        if depth > 1:
+            if not self.file_model.isDir(index) and file_name.endswith(".json"):
+                if not file_path in self.tab_item_dict:
+                    pDeleteAct = QAction(self.tr("Delete"), pmenu)
+                    pDeleteAct.triggered.connect(self.on_delCard)
+                    pmenu.addAction(pDeleteAct)
+        if len(pmenu.actions()):
+            pmenu.popup(self.sender().mapToGlobal(pos))
 
     @log_exception(True)
-    def on_newScriptableObject(self, checked: bool = False) -> None:
+    def on_new_so(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
-        if index.isValid():
-            file_name = self.file_model.fileName(index)
-            file_path = self.file_model.filePath(index)
-            top_parent = self.getDepthParent(index, depth=1)
-            if top_parent is None:
-                return
-            top_name = self.file_model.fileName(top_parent)
-            if top_name == "ScriptableObject":
-                group_name = file_name
-                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
-                                             type=SelectGUI.SelectGUI.NewData)
-                select.exec_()
-                template_key = select.lineEdit.text()
+        if not index.isValid():
+            return
 
-                if not select.write_flag:
+        top_parent = self.getDepthParent(index, depth=1)
+        if top_parent is None:
+            return
+
+        top_name = self.file_model.fileName(top_parent)
+        if top_name != "ScriptableObject":
+            return
+
+        type_name = self.file_model.fileName(index)
+        file_path = self.file_model.filePath(index)
+
+        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, type=SelectGUI.SelectGUI.NewData)
+        select.exec_()
+
+        if not select.write_flag:
+            return
+
+        try:
+            template_key = select.lineEdit.text()
+            name = select.name_editor.text()
+
+            path = Path(file_path) / f'{name}.json'
+            if path.exists():
+                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+                return
+
+            if select.use_def:
+                if not name:
                     return
 
-                try:
-                    card_name = select.name_editor.text()
+                data = DataBase.AllBaseJsonData.get(type_name)
+                if data is None:
+                    QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
+                    return
 
-                    if select.use_def:
-                        if not card_name:
-                            return
+                with path.open("w", encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
 
-                        path = Path(file_path) / f'{card_name}.json'
-                        if path.exists():
-                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
-                            return
+            elif name and template_key:
 
-                        data = DataBase.AllBaseJsonData.get(group_name)
-                        if data is None:
-                            QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
-                            return
+                with open(DataBase.AllPath[type_name][template_key], "r", encoding='utf-8') as f:
+                    temp_data = f.read(-1)
 
-                        with open(path, "w", encoding='utf-8') as f:
-                            json.dump(data, f, ensure_ascii=False, indent=4)
+                with path.open("w", encoding='utf-8') as f:
+                    f.write(temp_data)
 
-                    elif card_name and template_key:
-                        card_path = file_path + "/" + card_name + ".json"
-                        if not os.path.exists(card_path):
-                            with open(DataBase.AllPath[group_name][template_key], "r", encoding='utf-8') as f:
-                                temp_data = f.read(-1)
-                            with open(card_path, "w", encoding='utf-8') as f:
-                                f.write(temp_data)
-                        else:
-                            QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
-                except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-                self.init_completer()
+        except Exception as ex:
+            QtCore.qWarning(traceback.format_exc())
+        self.init_completer()
 
     @log_exception(True)
-    def on_newCard(self, checked: bool = False) -> None:
+    def on_new_uo(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
-        if index.isValid():
-            file_name = self.file_model.fileName(index)
-            file_path = self.file_model.filePath(index)
-            top_parent = self.getDepthParent(index, depth=1)
-            if top_parent is None:
+        if not index.isValid():
+            return
+
+        top_parent = self.getDepthParent(index, depth=1)
+        if top_parent is None:
+            return
+
+        file_name = self.file_model.fileName(index)
+        if not file_name:
+            return
+
+        file_path = self.file_model.filePath(index)
+        type_name = self.file_model.fileName(top_parent)
+
+        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, type=SelectGUI.SelectGUI.NewData,
+                                     auto_replace_key_guid=self.auto_replace_key_guid)
+        select.exec_()
+
+        if not select.write_flag:
+            return
+
+        try:
+            name = select.name_editor.text()
+            template_key = select.lineEdit.text()
+            if select.lineEdit.text().rfind("(") >= 0:
+                template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
+
+            path = Path(file_path) / f'{name}.json'
+            if path.exists():
+                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
                 return
-            top_name = self.file_model.fileName(top_parent)
-            if file_name:
-                group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
-                                             type=SelectGUI.SelectGUI.NewData,
-                                             auto_replace_key_guid=self.auto_replace_key_guid)
-                select.exec_()
-                if select.write_flag:
-                    template_key = select.lineEdit.text()
-                    if select.lineEdit.text().rfind("(") >= 0:
-                        template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
-                    try:
-                        card_name = select.name_editor.text()
 
-                        if select.use_def:
-                            if not card_name:
-                                return
+            if select.use_def:
+                if not name:
+                    return
 
-                            path = Path(file_path) / f'{card_name}.json'
-                            if path.exists():
-                                QMessageBox.warning(self, self.tr("Warning"),
-                                                    self.tr('A file with the same name exists'))
-                                return
+                data = DataBase.AllBaseJsonData.get(type_name)
+                if data is None:
+                    QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
+                    return
 
-                            data = DataBase.AllBaseJsonData.get(group_name)
-                            if data is None:
-                                QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
-                                return
+                with open(path, "w", encoding='utf-8') as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
 
-                            with open(path, "w", encoding='utf-8') as f:
-                                json.dump(data, f, ensure_ascii=False, indent=4)
+            elif name and template_key:
 
-                        elif card_name and template_key:
-                            card_path = file_path + "/" + card_name + ".json"
-                            if not os.path.exists(card_path):
-                                with open(DataBase.AllPath[group_name][template_key], "r", encoding="utf-8") as f:
-                                    temp_data = f.read(-1)
-                                temp_json = json.loads(temp_data)
-                                guid = temp_json["UniqueID"]
-                                if select.auto_replace_key_guid and self.auto_replace_key_guid:
-                                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Namespace"],
-                                                                             card_name)
-                                temp_data = json.dumps(temp_json, sort_keys=True)
-                                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-", ""))
-                                with open(card_path, "w", encoding='utf-8') as f:
-                                    f.write(temp_data)
-                            else:
-                                QMessageBox.warning(self, self.tr("Warning"),
-                                                    self.tr('A file with the same name exists'))
-                    except Exception as ex:
-                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-                    self.init_completer()
+                with open(DataBase.AllPath[type_name][template_key], "r", encoding="utf-8") as f:
+                    temp_data = f.read(-1)
+
+                temp_json = json.loads(temp_data)
+
+                guid = temp_json["UniqueID"]
+                if select.auto_replace_key_guid and self.auto_replace_key_guid:
+                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Namespace"], name)
+
+                temp_data = json.dumps(temp_json, sort_keys=True)
+                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-", ""))
+
+                with open(path, "w", encoding='utf-8') as f:
+                    f.write(temp_data)
+
+        except Exception as ex:
+            QtCore.qWarning(traceback.format_exc())
+            self.init_completer()
 
     @log_exception(True)
     def on_newModify(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
-        if index.isValid():
-            file_name = self.file_model.fileName(index)
-            file_path = self.file_model.filePath(index)
-            top_parent = self.getDepthParent(index, depth=1)
-            if top_parent is None:
-                return
-            top_name = self.file_model.fileName(top_parent)
-            if file_name:
-                group_name = top_name
-                select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False,
-                                             type=SelectGUI.SelectGUI.NewModify)
-                select.exec_()
-                if select.write_flag:
-                    target_key = select.lineEdit.text()
-                    try:
-                        dir_name = select.name_editor.text()
-                        if dir_name and target_key:
-                            target_group_name = ""
-                            target_guid = DataBase.AllGuidPlain[target_key]
-                            for type_key in DataBase.AllRef["CardData"].keys():
-                                if target_key in DataBase.AllRef["CardData"][type_key]:
-                                    target_group_name = "CardData"
-                                    break
-                            for group_key in DataBase.AllGuid.keys():
-                                if target_key in DataBase.AllGuid[group_key]:
-                                    target_group_name = group_key
-                                    break
-                            if target_group_name and target_guid:
-                                card_dir = file_path + "/" + dir_name
-                                card_path = file_path + "/" + dir_name + "/" + target_guid + ".json"
-                                if not os.path.exists(card_dir):
-                                    os.mkdir(card_dir)
-                                if not os.path.exists(card_path):
-                                    with open(card_path, "w", encoding="utf-8") as f:
-                                        f.write("{\n\n}")
-                                    self.openTreeViewItem(self.file_model.index(card_path))
-                                else:
-                                    QMessageBox.warning(self, self.tr("Warning"),
-                                                        self.tr('A file with the same name exists'))
-                    except Exception as ex:
-                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-                    self.init_completer()
+        if not index.isValid():
+            return
 
+        top_parent = self.getDepthParent(index, depth=1)
+        if top_parent is None:
+            return
+
+        file_name = self.file_model.fileName(index)
+        if not file_name:
+            return
+
+        file_path = self.file_model.filePath(index)
+        top_name = self.file_model.fileName(top_parent)
+
+        group_name = top_name
+        select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewModify)
+        select.exec_()
+
+        if not select.write_flag:
+            return
+
+        target_key = select.lineEdit.text()
+        try:
+            dir_name = select.name_editor.text()
+            if not dir_name or not target_key:
+                return
+
+            target_group_name = ""
+            target_guid = DataBase.AllGuidPlain[target_key]
+
+            for type_key in DataBase.AllRef["CardData"].keys():
+                if target_key in DataBase.AllRef["CardData"][type_key]:
+                    target_group_name = "CardData"
+                    break
+
+            for group_key in DataBase.AllGuid.keys():
+                if target_key in DataBase.AllGuid[group_key]:
+                    target_group_name = group_key
+                    break
+
+            if not target_group_name or not target_guid:
+                return
+
+            card_dir = file_path + "/" + dir_name
+            card_path = file_path + "/" + dir_name + "/" + target_guid + ".json"
+            if not os.path.exists(card_dir):
+                os.mkdir(card_dir)
+
+            if not os.path.exists(card_path):
+                with open(card_path, "w", encoding="utf-8") as f:
+                    f.write("{\n\n}")
+                self.openTreeViewItem(self.file_model.index(card_path))
+            else:
+                QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
+
+        except Exception as ex:
+            QtCore.qWarning(traceback.format_exc())
+        self.init_completer()
+
+    @log_exception(True)
     def on_new_data_modify(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if not index.isValid():
@@ -711,7 +739,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
 
         except Exception:
-            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+            QtCore.qWarning(traceback.format_exc())
         self.init_completer()
 
     @log_exception(True)
