@@ -395,9 +395,9 @@ class ItemGUI(QWidget, Ui_Item):
                                 while str(child_key) in item.mChilds:
                                     child_key += 1
                                 if self.auto_replace_key_guid:
-                                    loopReplaceLocalizationKeyAndReplaceGuid(sub_data, self.mod_info["Namespace"],
-                                                                             self.item_name, self.guid, item.key(),
-                                                                             child_key)
+                                    replace_l10n_key(sub_data, self.mod_info["Namespace"],
+                                                     self.item_name, self.guid, item.key(),
+                                                     child_key)
                                 self.model.addJsonItem(srcIndex, sub_data, item.field(), str(child_key))
                         return
 
@@ -446,8 +446,8 @@ class ItemGUI(QWidget, Ui_Item):
                 child_key += 1
             data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
             if self.auto_replace_key_guid:
-                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid,
-                                                         item.key(), child_key)
+                replace_l10n_key(data, self.mod_info["Namespace"], self.item_name, self.guid,
+                                 item.key(), child_key)
             self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
@@ -477,9 +477,9 @@ class ItemGUI(QWidget, Ui_Item):
                     child_key += 1
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
-                                                             self.guid,
-                                                             item.key(), child_key)
+                    replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
+                                     self.guid,
+                                     item.key(), child_key)
                 self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
@@ -625,8 +625,8 @@ class ItemGUI(QWidget, Ui_Item):
                         with open(DataBase.AllPath[self.field][template_key], 'r', encoding='utf-8') as f:
                             data = json.load(f)[item.key()]
                         if self.auto_replace_key_guid:
-                            loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
-                                                                     self.guid)
+                            replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
+                                             self.guid)
                         self.model.deleteItem(srcIndex)
                         self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                         return
@@ -654,8 +654,8 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.deleteItem(srcIndex)
                 data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
-                                                             self.guid)
+                    replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
+                                     self.guid)
                 self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                 return
 

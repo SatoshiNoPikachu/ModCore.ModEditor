@@ -11,31 +11,29 @@ from utils import *
 from MyLogger import *
 
 
-def loopReplaceLocalizationKeyAndReplaceGuid(jsondata: dict, mod_name: str, card_name: str, guid: str = "",
-                                             entry_key: str = "", index: int = -1):
-    if isinstance(jsondata, list):
-        for item in jsondata:
-            loopReplaceLocalizationKeyAndReplaceGuid(item, mod_name, card_name, guid)
+def replace_l10n_key(data: dict, mod_name: str, obj_name: str, guid: str = "",
+                     entry_key: str = "", index: int = -1):
+    if isinstance(data, list):
+        for item in data:
+            replace_l10n_key(item, mod_name, obj_name, guid)
         return
-    elif isinstance(jsondata, dict):
-        pass
-    else:
+    elif not isinstance(data, dict):
         return
-    for key in jsondata.keys():
-        if key == "LocalizationKey" and jsondata[key] != "":
-            entry = jsondata[key][jsondata[key].rfind("_"):]
+    for key in data.keys():
+        if key == "LocalizationKey" and data[key] != "":
+            entry = data[key][data[key].rfind("_"):]
             if entry_key != "" and index > 0:
                 st_idx = entry.rfind(entry_key)
                 end_idx = entry[st_idx:].find("]") + st_idx
                 entry = entry[:st_idx + len(entry_key) + 1] + str(index) + entry[end_idx:]
-            jsondata[key] = mod_name + "_" + card_name + entry
-        elif isinstance(jsondata[key], dict):
-            loopReplaceLocalizationKeyAndReplaceGuid(jsondata[key], mod_name, card_name, guid, entry_key, index)
-        elif isinstance(jsondata[key], list):
-            for item in jsondata[key]:
-                loopReplaceLocalizationKeyAndReplaceGuid(item, mod_name, card_name, guid, entry_key, index)
-        elif key == "ParentObjectID" and guid != "" and jsondata["ParentObjectID"] != "":
-            jsondata["ParentObjectID"] = ""
+            data[key] = mod_name + "_" + obj_name + entry
+        elif isinstance(data[key], dict):
+            replace_l10n_key(data[key], mod_name, obj_name, guid, entry_key, index)
+        elif isinstance(data[key], list):
+            for item in data[key]:
+                replace_l10n_key(item, mod_name, obj_name, guid, entry_key, index)
+        elif key == "ParentObjectID":
+            data["ParentObjectID"] = ""
 
 
 def delete_keys_from_dict(src_dict, key: str):

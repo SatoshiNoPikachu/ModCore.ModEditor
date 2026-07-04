@@ -212,7 +212,7 @@ class ModifyItemGUI(ItemGUI):
         if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
             data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
             if self.auto_replace_key_guid:
-                loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name, self.guid)
+                replace_l10n_key(data, self.mod_info["Namespace"], self.item_name, self.guid)
             self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)
@@ -238,9 +238,9 @@ class ModifyItemGUI(ItemGUI):
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
                 if self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(data, self.mod_info["Namespace"], self.item_name,
-                                                             self.guid,
-                                                             item.key(), i)
+                    replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
+                                     self.guid,
+                                     item.key(), i)
                 self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)

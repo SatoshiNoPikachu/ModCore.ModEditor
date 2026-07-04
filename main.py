@@ -611,7 +611,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
                 guid = temp_json["UniqueID"]
                 if select.auto_replace_key_guid and self.auto_replace_key_guid:
-                    loopReplaceLocalizationKeyAndReplaceGuid(temp_json, self.mod_info["Namespace"], name)
+                    replace_l10n_key(temp_json, self.mod_info["Namespace"], name)
 
                 temp_data = json.dumps(temp_json, sort_keys=True)
                 temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-", ""))
