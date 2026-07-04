@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import json
 import os
 import configparser
 from pathlib import Path
@@ -599,25 +600,21 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
                     return
 
-                with open(path, "w", encoding='utf-8') as f:
-                    json.dump(data, f, ensure_ascii=False, indent=4)
+                with path.open("w", encoding='utf-8') as f:
+                    json.dump(data, f, sort_keys=True, ensure_ascii=False)
 
             elif name and template_key:
 
                 with open(DataBase.AllPath[type_name][template_key], "r", encoding="utf-8") as f:
-                    temp_data = f.read(-1)
+                    temp_json = json.load(f)
 
-                temp_json = json.loads(temp_data)
+                temp_json["UniqueID"] = str(uuid.uuid4()).replace("-", "")
 
-                guid = temp_json["UniqueID"]
                 if select.auto_replace_key_guid and self.auto_replace_key_guid:
                     replace_l10n_key(temp_json, self.mod_info["Namespace"], name)
 
-                temp_data = json.dumps(temp_json, sort_keys=True)
-                temp_data = temp_data.replace(guid, str(uuid.uuid4()).replace("-", ""))
-
-                with open(path, "w", encoding='utf-8') as f:
-                    f.write(temp_data)
+                with path.open("w", encoding='utf-8') as f:
+                    json.dump(temp_json, f, sort_keys=True, ensure_ascii=False)
 
         except Exception as ex:
             QtCore.qWarning(traceback.format_exc())
