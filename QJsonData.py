@@ -24,7 +24,7 @@ class QJsonTreeItem(object):
         self.mType = None
         self.mValue = None
         self.mField = None
-        self.mVaild = False
+        self.mValid = False
         self.mDepth = None
         self.mNote = None
         self.mStatus = "Normal"
@@ -112,7 +112,7 @@ class QJsonTreeItem(object):
         self.mField = value
 
     def setVaild(self, value: bool):
-        self.mVaild = value
+        self.mValid = value
 
     def setDepth(self, value: int):
         self.mDepth = value
@@ -157,8 +157,8 @@ class QJsonTreeItem(object):
     def type(self):
         return self.mType
 
-    def vaild(self):
-        return self.mVaild
+    def valid(self):
+        return self.mValid
 
     def note(self):
         return self.mNote
@@ -352,7 +352,7 @@ class QJsonTreeItem(object):
 
                 QJsonTreeItem.arr_add_deep_auto_complete_update(data, value[key])
 
-        if rootItem.mVaild:
+        if rootItem.mValid:
             if rootItem.parent() is not None:
                 rootItem.parent().setVaild(True)
 
@@ -458,7 +458,7 @@ class QJsonProxyModel(QSortFilterProxyModel):
     def filterAcceptsRow(self, source_row: int, source_parent: QModelIndex) -> bool:
         item = self.sourceModel().index(source_row, 0, source_parent).internalPointer()
 
-        if self.validFilter and not item.vaild():
+        if self.validFilter and not item.valid():
             return False
 
         return item.depth() != 1 or self.keyFilter.match(item.display_key).hasMatch()
@@ -476,7 +476,7 @@ class QJsonModel(QAbstractItemModel):
     def __init__(self, root_field, parent=None, is_modify=False):
         super().__init__(parent)
         self.mRootItem = QJsonTreeItem()
-        self.mHeaders = ["key", "value", "field", "type", "vaild", "note", "custom note", "status"]
+        self.mHeaders = ["key", "value", "field", "type", "valid", "note", "custom note", "status"]
         self.root_field = root_field
         self.is_modify = is_modify
 
@@ -492,13 +492,13 @@ class QJsonModel(QAbstractItemModel):
                 raise "Error Json Type"
                 # self.mRootItem.setType(dict)
                 # self.mRootItem = QJsonTreeItem.load(self.mDocument.object(), self.root_field)
-            self.loopSetWarpField(self.mRootItem, self.mRootItem)
+            self.loop_set_warp_field(self.mRootItem, self.mRootItem)
             self.endResetModel()
             return True
         print("QJsonModel: error loading Json")
         return False
 
-    def loopSetWarpField(self, item: QJsonTreeItem, src_item: QJsonTreeItem):
+    def loop_set_warp_field(self, item: QJsonTreeItem, src_item: QJsonTreeItem):
         for key, child in item.mChilds.items():
             if key.endswith("WarpType"):
                 child.setField("WarpType")
@@ -509,13 +509,9 @@ class QJsonModel(QAbstractItemModel):
                     if warpTypeItem.value() == 3 or warpTypeItem.value() == 6:
                         child.setField("WarpRef")
                         child.setStatus("Normal")
-                    # elif warpTypeItem.value() == 4:
-                    #     child.setField("WarpAdd")
-                    # elif warpTypeItem.value() == 5:
-                    #     child.setField("WarpModity")
             elif (child.field() is None or child.field() == "") and item.key().endswith("WarpData"):
                 child.setField(item.field())
-            self.loopSetWarpField(child, src_item)
+            self.loop_set_warp_field(child, src_item)
 
     def removeListItem(self, index: QModelIndex):
         if index.isValid():
@@ -795,7 +791,7 @@ class QJsonModel(QAbstractItemModel):
             item.setVaild(True)
             self.endInsertRows()
             childIndex = self.index(childItem.row(), 0, index)
-            self.loopSetWarpField(item, item)
+            self.loop_set_warp_field(item, item)
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
@@ -965,7 +961,7 @@ class QJsonModel(QAbstractItemModel):
             elif col == 3:
                 return str(item.type())
             elif col == 4:
-                return str(item.vaild())
+                return str(item.valid())
             elif col == 5:
                 if item.note() is not None and item.note():
                     return item.note()
