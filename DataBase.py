@@ -77,7 +77,7 @@ class DataBase(DataPack):
     AllCardData = {}  # DataBase.AllCardData[RefTrans] -> CardData Guid
     AllPath = {}  # DataBase.AllPath["GameStat"][Ref] -> FilePath
     AllPathPlain = {}  # DataBase.AllPathPlain[Ref] -> FilePath
-    AllScriptableObject = {}  # DataBase.AllScriptableObject[Ref] -> Guid or Ref
+    AllScriptableObject: dict[str, dict[str, str]] = {}
     AllScriptableObjectRev = {}
     AllCollection = {}  # DataBase.AllCollection["CardsDropCollection"][CustomName] -> json data
     AllListCollection = {}  # DataBase.AllListCollection["CardsDropCollection"][CustomName] -> List json data
@@ -244,7 +244,6 @@ class DataBase(DataPack):
         DataBase.AllGuidPlainRev = {v: k for k, v in DataBase.AllGuidPlain.items()}
         DataBase.AllScriptableObjectRev = {t: {v: k for k, v in d.items()} for t, d in
                                            DataBase.AllScriptableObject.items()}
-        pass
 
     @classmethod
     def load_mods_work_dir(cls):

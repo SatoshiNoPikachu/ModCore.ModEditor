@@ -43,7 +43,7 @@ class DataPack:
     SupportList: set[str] = {'GameSourceModify', 'DataObjectModify'}
 
     AllRefBase: dict[str, list[str] | dict[str, list[str]]] = {}
-    AllScriptableObjectBase = {}
+    AllScriptableObjectBase: dict[str, dict[str, str]] = {}
 
     AllGuidBase: dict[str, dict[str, str | dict[str, str]]] = {}
     AllGuidPlainBase: dict[str, str] = {}

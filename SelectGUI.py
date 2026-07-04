@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+from typing import Any
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -127,18 +128,12 @@ class SelectGUI(QDialog, Ui_Select):
                     self.horizontalLayout_CheckBox2.addWidget(check_box, i // 12, i % 12)
                 self.m_completer = QCompleter(ref_list, self)
 
-            elif self.field_name in DataBase.AllEnum:
-                self.comboBox.addItems(DataBase.AllEnum[self.field_name].keys())
-                self.m_completer = QCompleter(DataBase.AllEnum[self.field_name].keys(), self)
-            elif self.field_name in DataBase.AllRef:
-                self.comboBox.addItems(DataBase.AllRef[self.field_name])
-                self.m_completer = QCompleter(DataBase.AllRef[self.field_name], self)
-
             elif self.field_name == "ScriptableObject":
                 ref_list = []
                 self.checkBoxList = {}
-                for key in DataBase.AllScriptableObject.keys():
+                for key in sorted(DataBase.AllScriptableObject.keys()):
                     if key == "CardData" or key.find("Tag") != -1:
+                        print(key)
                         check_box = QCheckBox()
                         check_box.setText(key)
                         if checked:
@@ -155,6 +150,13 @@ class SelectGUI(QDialog, Ui_Select):
                         self.horizontalLayout_CheckBox.addWidget(check_box)
                 # self.comboBox.addItems(DataBase.AllScriptableObject.keys())
                 self.m_completer = QCompleter(ref_list, self)
+
+            elif self.field_name in DataBase.AllEnum:
+                self.comboBox.addItems(DataBase.AllEnum[self.field_name].keys())
+                self.m_completer = QCompleter(DataBase.AllEnum[self.field_name].keys(), self)
+            elif self.field_name in DataBase.AllRef:
+                self.comboBox.addItems(DataBase.AllRef[self.field_name])
+                self.m_completer = QCompleter(DataBase.AllRef[self.field_name], self)
 
             elif self.field_name == "BlueprintCardDataCardTabGroup":
                 self.comboBox.addItems(DataBase.AllBlueprintTab)
