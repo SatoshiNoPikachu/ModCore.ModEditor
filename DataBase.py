@@ -48,13 +48,7 @@ def delete_keys_from_dict(src_dict, key: str):
 
 class DataBase(DataPack):
     DataDir = None
-    # RefNameList = ["AudioClip", "Sprite", "WeatherSpecialEffect"]
-    # # RefNameList = ["ActionTag", "AudioClip", "CardTag", "EquipmentTag", "EndgameLogCategory", "Sprite", "WeatherSet", "WeatherSpecialEffect", "CardTabGroup"]
-    # RefGuidList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameObject"]
-    # SupportList = ["CardData", "CharacterPerk", "GameStat", "Objective", "SelfTriggeredAction", "PlayerCharacter",
-    #                "PerkGroup", "EndgameLogCategory", "PerkTabGroup", "GameSourceModify", "ScriptableObject",
-    #                "DataObjectModify"]
+    CurModName = ""
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -86,13 +80,8 @@ class DataBase(DataPack):
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
 
     AutoCompleteUpdate = False
-
     LocalizationFileName = "En.csv"
-
-    CurModName = ""
-
     ModsWorkDir = ""
-
     EnableKeyAlias = True
 
     def __init__(self):
@@ -107,14 +96,8 @@ class DataBase(DataPack):
             os.mkdir(DataBase.DataDir + "/Mods")
 
         DataBase.load_packs(data_dir)
-
-        # Load SpecialTypeField
         DataBase.loadSpecialTypeField()
-
-        # Load Collection
         DataBase.loadCollection()
-
-        # Load GameSimpCn
         DataBase.loadGameSimpCn()
 
     @staticmethod
@@ -416,152 +399,6 @@ class DataBase(DataPack):
                 cls.AllRef["Sprite"].append(f'{prefix}{file.stem}')
 
     @staticmethod
-    def loadName():
-        DataBase.AllRefBase = {}
-        DataBase.AllScriptableObjectBase = {}
-
-        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/"):
-            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableBaseJsonData/" + dir):
-                if dir not in DataBase.RefGuidList:
-                    DataBase.RefGuidList.append(dir)
-                    DataBase.SupportList.append(dir)
-
-        for dir in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/"):
-            if os.path.isdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/" + dir):
-                DataBase.RefNameList.append(dir)
-
-        for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/"):
-            if not file.endswith(".txt"):
-                continue
-            with open(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectObjectName/" + file, encoding='utf-8') as f:
-                temp = f.readlines()
-                temp = list(map(lambda x: x.replace("\n", ""), temp))
-                t = file[:-4]
-                DataBase.AllRefBase[t] = temp
-
-                prefix = f'{t}|'
-                DataBase.AllScriptableObjectBase.setdefault(t, {})
-                DataBase.AllScriptableObjectBase[t].update({(v := f'{prefix}{k}'): v for k in temp})
-
-                if file[:-4] == "CardTabGroup":
-                    for item in temp:
-                        if item.startswith("Tab_"):
-                            if item.count("_") == 1:
-                                DataBase.AllBlueprintTab.append(item)
-                            else:
-                                DataBase.AllBlueprintSubTab.append(item)
-                        if item.startswith("GpTag_"):
-                            DataBase.AllItemTabGpGroup.append(item)
-                if file[:-4] == "CardFilterGroup":
-                    DataBase.AllCardFilterGroup.extend(temp)
-
-        if "WeatherParticles" in DataBase.AllRefBase and "WeatherSpecialEffect" in DataBase.AllRefBase:
-            DataBase.AllRefBase["WeatherSpecialEffect"].extend(copy.deepcopy(DataBase.AllRefBase["WeatherParticles"]))
-
-    @staticmethod
-    def loadGuid():
-        DataBase.AllGuidBase = {}  # Type: {Key: Guid}
-        DataBase.AllGuidPlainBase = {}
-        DataBase.AllCardDataBase = {}  # Key: Guid
-
-        for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/"):
-            if not file.endswith(".json"):
-                continue
-            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/" + file, encoding='utf-8') as f:
-                temp = json.loads(f.read(-1))
-                t = file[:-5]
-
-                DataBase.AllRefBase[t] = list(temp.keys())
-                DataBase.AllGuidBase[t] = temp
-                DataBase.AllGuidPlainBase.update(temp)
-
-                DataBase.AllScriptableObjectBase.setdefault(t, {})
-                DataBase.AllScriptableObjectBase[t].update({(v := f'{t}|{k}'): remove_postfix(v) for k in temp})
-
-        DataBase.AllRefBase["CardData"] = {}
-        DataBase.AllGuidBase["CardData"] = {}
-        for file in os.listdir(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/CardData/"):
-            if not file.endswith(".json"):
-                continue
-            with open(DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableGUID/CardData/" + file,
-                      encoding='utf-8') as f:
-                temp = json.loads(f.read(-1))
-                DataBase.AllCardDataBase.update(temp)
-                DataBase.AllGuidBase["CardData"][file[:-5]] = temp
-                DataBase.AllRefBase["CardData"][file[:-5]] = list(temp.keys())
-                DataBase.AllGuidPlainBase.update(temp)
-
-                aso = DataBase.AllScriptableObjectBase
-                aso.setdefault('CardData', {})
-                aso['CardData'].update({(v := f'CardData|{k}'): remove_postfix(v) for k in temp})
-
-    @staticmethod
-    def loadPath():
-        DataBase.AllPathBase = {}  # Type: {Key: Path}
-        base_path = DataBase.DataDir + r"/CSTI-JsonData/UniqueIDScriptableJsonDataWithWarpLitAllInOne/"
-        for dir in os.listdir(base_path):
-            if os.path.isdir(base_path + r"/" + dir):
-                DataBase.AllPathBase[dir] = {}
-                files = [y for x in os.walk(base_path + dir) for y in glob(os.path.join(x[0], '*.json'))]
-                for file in files:
-                    DataBase.AllPathBase[dir][os.path.basename(file)[:-5]] = file
-
-        base_path = DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectJsonDataWithWarpLitAllInOne/"
-        for dir in os.listdir(base_path):
-            if os.path.isdir(base_path + r"/" + dir):
-                DataBase.AllPathBase[dir] = {}
-                files = [y for x in os.walk(base_path + dir) for y in glob(os.path.join(x[0], '*.json'))]
-                for file in files:
-                    DataBase.AllPathBase[dir][os.path.basename(file)[:-5]] = file
-
-    @staticmethod
-    def loadBaseJson():
-        for file in [y for x in os.walk(DataBase.DataDir + r'/CSTI-JsonData/UniqueIDScriptableBaseJsonData/') for y in
-                     glob(os.path.join(x[0], '*.json'))]:
-            TypeName = os.path.basename(file)[:-5]
-            if TypeName in DataBase.AllBaseJsonData:
-                continue
-            with open(file, encoding='utf-8') as f:
-                try:
-                    DataBase.AllBaseJsonData[TypeName] = json.load(f)
-                    if DataBase.AllBaseJsonData[TypeName] == {}:
-                        QtCore.qWarning(bytes(TypeName + " is empty", encoding="utf-8"))
-                except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-        # Special
-        DataBase.AllBaseJsonData["Vector2Int"] = DataBase.AllBaseJsonData["Vector2"]
-
-    @staticmethod
-    def loadScriptableObjectField():
-        files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData")
-        for file in files:
-            if file.endswith(".json"):
-                with open(DataBase.DataDir + r'/CSTI-JsonData/ScriptableObjectTypeJsonData/' + file,
-                          encoding='utf-8') as f:
-                    try:
-                        DataBase.AllTypeField[file[:-5]] = json.loads(f.read(-1))
-                    except Exception as ex:
-                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-
-        for key in list(DataBase.AllTypeField.keys()):
-            if key in DataBase.AllBaseJsonData:
-                DataBase.AllTypeField[key] = {k: DataBase.AllTypeField[key][k] for k in
-                                              DataBase.AllBaseJsonData[key].keys() if k in DataBase.AllTypeField[key]}
-
-        files = os.listdir(DataBase.DataDir + r"/CSTI-JsonData/ScriptableObjectTypeJsonData/EnumType")
-        for file in files:
-            if file.endswith(".json"):
-                with open(DataBase.DataDir + r'/CSTI-JsonData/ScriptableObjectTypeJsonData/EnumType/' + file,
-                          encoding='utf-8') as f:
-                    try:
-                        DataBase.AllEnum[file[:-5]] = json.loads(f.read(-1))
-                    except Exception as ex:
-                        QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-
-        for key, item in DataBase.AllEnum.items():
-            DataBase.AllEnumRev[key] = {v: k for k, v in DataBase.AllEnum[key].items()}
-
-    @staticmethod
     def loadSpecialTypeField():
         for key, item_list in DataBase.AllSpecialTypeField.items():
             if key in DataBase.AllTypeField:
@@ -761,38 +598,6 @@ class DataBase(DataPack):
                 f.write('",')
                 f.write(DataBase.AllModSimpCn[key]["translate"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('\n')
-
-    @staticmethod
-    def loadNote(lan: str = "zh_CN"):
-        if lan == "zh_CN":
-            note_name = "Notes"
-        else:
-            note_name = "Notes-En"
-        if os.path.exists(DataBase.DataDir + r'/CSTI-JsonData/' + note_name):
-            for file in os.listdir(DataBase.DataDir + r'/CSTI-JsonData/' + note_name):
-                try:
-                    if file.endswith(".txt"):
-                        if file[:-4] not in DataBase.AllNotes:
-                            DataBase.AllNotes[file[:-4]] = {}
-                        with open(DataBase.DataDir + r'/CSTI-JsonData/' + note_name + r'/' + file, "r",
-                                  encoding='utf-8') as f:
-                            lines = f.readlines()
-                            for line in lines:
-                                line = line.replace("\n", "")
-                                items = line.split("\t")
-                                if len(items) == 2:
-                                    DataBase.AllNotes[file[:-4]][items[0]] = items[1]
-                    elif file.endswith(".json"):
-                        if file[:-5] not in DataBase.AllNotes:
-                            DataBase.AllNotes[file[:-5]] = {}
-                        with open(DataBase.DataDir + r'/CSTI-JsonData/' + note_name + r'/' + file, "r",
-                                  encoding='utf-8') as f:
-                            data = json.load(f)
-                            for key, item in data.items():
-                                if type(item) == str:
-                                    DataBase.AllNotes[file[:-5]][key] = item
-                except Exception as ex:
-                    QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     @staticmethod
     def loadGameSimpCn():

@@ -35,10 +35,7 @@ from Ui_Main import *
 import traceback
 import sys
 import shutil
-import ujson as json
 import uuid
-import time
-# import anytree
 from MyLogger import *
 from DataBase import *
 import ItemGUI
@@ -47,8 +44,6 @@ import ModifyItemGUI
 import SelectGUI
 import ExportToZip
 from glob import glob
-
-# from functools import partial
 
 ModEditorVersion = "1.1.0"
 
