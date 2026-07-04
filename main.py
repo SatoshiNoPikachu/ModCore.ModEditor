@@ -524,8 +524,12 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             return
 
         try:
-            template_key = select.lineEdit.text()
             name = select.name_editor.text()
+            if name.endswith(')'):
+                QMessageBox.warning(self, self.tr("Warning"), self.tr('The name cannot end with ")"'))
+                return
+
+            template_key = select.lineEdit.text()
 
             path = Path(file_path) / f'{name}.json'
             if path.exists():
@@ -582,9 +586,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         try:
             name = select.name_editor.text()
-            template_key = select.lineEdit.text()
-            if select.lineEdit.text().rfind("(") >= 0:
-                template_key = select.lineEdit.text()[0:select.lineEdit.text().rfind("(")]
+            if name.endswith(')'):
+                QMessageBox.warning(self, self.tr("Warning"), self.tr('The name cannot end with ")"'))
+                return
+
+            template_key = remove_postfix(select.lineEdit.text())
 
             path = Path(file_path) / f'{name}.json'
             if path.exists():
