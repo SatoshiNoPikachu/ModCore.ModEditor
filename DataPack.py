@@ -43,6 +43,7 @@ class DataPack:
     SupportList: set[str] = {'GameSourceModify', 'DataObjectModify'}
 
     AllRefBase: dict[str, list[str] | dict[str, list[str]]] = {}
+    AllObjNameBase: dict[str, dict[str, str]] = {}
     AllScriptableObjectBase: dict[str, dict[str, str]] = {}
 
     AllGuidBase: dict[str, dict[str, str | dict[str, str]]] = {}
@@ -125,18 +126,20 @@ class DataPack:
             cls.RefNameList.add(type_name)
             ref_base = cls.AllRefBase[type_name] = []
             so_base = cls.AllScriptableObjectBase[type_name] = {}
+            name_base = cls.AllObjNameBase[type_name] = {}
 
             prefix = f'{type_name}|'
 
             for pf in ps:
                 with pf.open('r', encoding='utf-8') as f:
-                    data = json.load(f)
+                    data: dict = json.load(f)
 
-                ref_base.extend(refs := data.values())
+                ref_base.extend(data.keys())
 
-                for k in refs:
-                    v = prefix + k
-                    so_base[v] = v
+                for k, v in data.items():
+                    so_base[prefix + k] = prefix + v
+
+                    name_base[v] = k
 
     @classmethod
     def load_guid(cls, path: Path):

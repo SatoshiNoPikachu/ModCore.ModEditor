@@ -9,7 +9,7 @@ def remove_postfix(text: str) -> str:
 
 def is_uid_type(type_name: str) -> bool:
     from DataBase import DataBase
-    return type_name in DataBase.AllGuid
+    return type_name in DataBase.RefGuidList
 
 
 def get_mod_display_name(mod_info: dict):

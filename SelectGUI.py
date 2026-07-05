@@ -133,7 +133,6 @@ class SelectGUI(QDialog, Ui_Select):
                 self.checkBoxList = {}
                 for key in sorted(DataBase.AllScriptableObject.keys()):
                     if key == "CardData" or key.find("Tag") != -1:
-                        print(key)
                         check_box = QCheckBox()
                         check_box.setText(key)
                         if checked:

@@ -529,7 +529,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 QMessageBox.warning(self, self.tr("Warning"), self.tr('The name cannot end with ")"'))
                 return
 
-            template_key = select.lineEdit.text()
+            template_key = remove_postfix(select.lineEdit.text())
 
             path = Path(file_path) / f'{name}.json'
             if path.exists():
@@ -723,10 +723,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if not target_key:
                 return
 
-            if is_uid_type(type_name):
-                target_key = remove_postfix(target_key)
-
-            target_key = target_key.replace(":", "@", 1)
+            target_key = remove_postfix(target_key).replace(":", "@", 1)
 
             path_dir = Path(file_path) / dir_name
             path_file = path_dir / f'{target_key}.json'

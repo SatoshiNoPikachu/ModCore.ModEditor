@@ -20,7 +20,7 @@ pattern_FileID = '''m_FileID'''
 class QJsonTreeItem(object):
     def __init__(self, parent=None):
         self.mParent = parent
-        self.mChilds = {}
+        self.mChilds: dict[str, QJsonTreeItem] = {}
         self.mType = None
         self.mValue = None
         self.mField = None
@@ -29,7 +29,7 @@ class QJsonTreeItem(object):
         self.mNote = None
         self.mStatus = "Normal"
         self.mCustomNote = ""
-
+        self.ref_type = None
         self.IsOverride = False
         self.comment = None
         self.display_key = None
@@ -41,9 +41,7 @@ class QJsonTreeItem(object):
         return self.mChilds[list(self.mChilds.keys())[row]]
 
     def childByKey(self, key: str):
-        if key in self.mChilds:
-            return self.mChilds[key]
-        return None
+        return self.mChilds.get(key)
 
     def brother(self, key: str):
         try:
@@ -499,18 +497,27 @@ class QJsonModel(QAbstractItemModel):
         return False
 
     def loop_set_warp_field(self, item: QJsonTreeItem, src_item: QJsonTreeItem):
-        for key, child in item.mChilds.items():
+        childs = item.mChilds
+        for key, child in childs.items():
             if key.endswith("WarpType"):
                 child.setField("WarpType")
                 child.setStatus("Normal")
+
             elif key.endswith("WarpData"):
-                if key[:-8] + "WarpType" in item.mChilds.keys():
-                    warpTypeItem = item.mChilds[key[:-8] + "WarpType"]
-                    if warpTypeItem.value() == 3 or warpTypeItem.value() == 6:
+                main_key = key[:-8]
+                if main_item := item.childByKey(main_key):
+                    child.ref_type = main_item.field()
+
+                if type_item := item.childByKey(main_key + 'WarpType'):
+                    type_value = type_item.value()
+                    if type_value == 3 or type_value == 6:
                         child.setField("WarpRef")
                         child.setStatus("Normal")
-            elif (child.field() is None or child.field() == "") and item.key().endswith("WarpData"):
+
+            elif not child.field() and item.key().endswith("WarpData"):
                 child.setField(item.field())
+                child.ref_type = item.ref_type
+
             self.loop_set_warp_field(child, src_item)
 
     def removeListItem(self, index: QModelIndex):
@@ -541,85 +548,87 @@ class QJsonModel(QAbstractItemModel):
                 self.endRemoveRows()
 
     def addRefWarp(self, index: QModelIndex, value: str, key: str = None, field: str = None, brother: bool = True):
-        if index.isValid():
-            model = index.model()
-            if hasattr(model, 'mapToSource'):
-                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-            else:
-                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if not index.isValid():
+            return
 
-            if key is None:
-                key = item.key()
+        model = index.model()
+        if hasattr(model, 'mapToSource'):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            if field is None:
-                field = "WarpRef"
+        if key is None:
+            key = item.key()
 
-            if brother:
-                if value:
-                    warpTypeItem = item.brother(key + "WarpType")
-                    warpDataItem = item.brother(key + "WarpData")
-                    if warpTypeItem is None:
-                        self.addBrother(srcIndex, key + "WarpType", int, 3, "WarpType", True)
-                    else:
-                        warpTypeItem.setValue(3)
-                    if warpDataItem is None:
-                        if item.type() == "list":
-                            self.addBrother(srcIndex, key + "WarpData", list, "", field, True)
-                            warpDataItem = item.brother(key + "WarpData")
-                            warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
-                            child_key = 0
-                            while str(child_key) in warpDataItem.mChilds:
-                                child_key += 1
-                            self.addItem(warpDataIndex, str(child_key), str, value, field, True)
-                        else:
-                            self.addBrother(srcIndex, key + "WarpData", str, value, field, True)
-                    else:
-                        if item.type() == "list":
-                            warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
-                            child_key = 0
-                            while str(child_key) in warpDataItem.mChilds:
-                                child_key += 1
-                            self.addItem(warpDataIndex, str(child_key), str, value, field, True)
-                        else:
-                            warpDataItem.setValue(value)
-                    item.setVaild(True)
+        if field is None:
+            field = "WarpRef"
+
+        if brother:
+            if value:
+                warpTypeItem = item.brother(key + "WarpType")
+                warpDataItem = item.brother(key + "WarpData")
+                if warpTypeItem is None:
+                    self.addBrother(srcIndex, key + "WarpType", int, 3, "WarpType", True)
                 else:
-                    self.deleteBrother(srcIndex, key + "WarpType")
-                    self.deleteBrother(srcIndex, key + "WarpData")
-                    item.setVaild(False)
-            else:
-                if value:
-                    warpTypeItem = item.childByKey(key + "WarpType")
-                    warpDataItem = item.childByKey(key + "WarpData")
-                    if warpTypeItem is None:
-                        self.addItem(srcIndex, key + "WarpType", int, 3, "WarpType", True)
+                    warpTypeItem.setValue(3)
+                if warpDataItem is None:
+                    if item.type() == "list":
+                        self.addBrother(srcIndex, key + "WarpData", list, "", field, True)
+                        warpDataItem = item.brother(key + "WarpData")
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, field, True, item.field())
                     else:
-                        warpTypeItem.setValue(3)
-                    if warpDataItem is None:
-                        if item.type() == "list":
-                            self.addItem(srcIndex, key + "WarpData", list, "", field, True)
-                            warpDataItem = item.childByKey(key + "WarpData")
-                            warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex)
-                            child_key = 0
-                            while str(child_key) in warpDataItem.mChilds:
-                                child_key += 1
-                            self.addItem(warpDataIndex, str(child_key), str, value, field, True)
-                        else:
-                            self.addItem(srcIndex, key + "WarpData", str, value, field, True)
-                    else:
-                        if item.type() == "list":
-                            warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex)
-                            child_key = 0
-                            while str(child_key) in warpDataItem.mChilds:
-                                child_key += 1
-                            self.addItem(warpDataIndex, str(child_key), str, value, field, True)
-                        else:
-                            warpDataItem.setValue(value)
-                    item.setVaild(True)
+                        self.addBrother(srcIndex, key + "WarpData", str, value, field, True, item.field())
                 else:
-                    self.deleteChildItem(srcIndex, key + "WarpType")
-                    self.deleteChildItem(srcIndex, key + "WarpData")
-                    item.setVaild(False)
+                    if item.type() == "list":
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex.parent())
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, field, True, item.field())
+                    else:
+                        warpDataItem.setValue(value)
+                item.setVaild(True)
+            else:
+                self.deleteBrother(srcIndex, key + "WarpType")
+                self.deleteBrother(srcIndex, key + "WarpData")
+                item.setVaild(False)
+        else:
+            if value:
+                warpTypeItem = item.childByKey(key + "WarpType")
+                warpDataItem = item.childByKey(key + "WarpData")
+                if warpTypeItem is None:
+                    self.addItem(srcIndex, key + "WarpType", int, 3, "WarpType", True)
+                else:
+                    warpTypeItem.setValue(3)
+                if warpDataItem is None:
+                    if item.type() == "list":
+                        self.addItem(srcIndex, key + "WarpData", list, "", field, True)
+                        warpDataItem = item.childByKey(key + "WarpData")
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex)
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, field, True, item.field())
+                    else:
+                        self.addItem(srcIndex, key + "WarpData", str, value, field, True, item.field())
+                else:
+                    if item.type() == "list":
+                        warpDataIndex = self.index(warpDataItem.row(), 0, srcIndex)
+                        child_key = 0
+                        while str(child_key) in warpDataItem.mChilds:
+                            child_key += 1
+                        self.addItem(warpDataIndex, str(child_key), str, value, field, True, item.field())
+                    else:
+                        warpDataItem.setValue(value)
+                item.setVaild(True)
+            else:
+                self.deleteChildItem(srcIndex, key + "WarpType")
+                self.deleteChildItem(srcIndex, key + "WarpData")
+                item.setVaild(False)
 
     def addAddRefWarp(self, index: QModelIndex, value: str = "", key: str = None, field: str = None,
                       brother: bool = True):
@@ -764,13 +773,14 @@ class QJsonModel(QAbstractItemModel):
                     self.deleteChildItem(srcIndex, key + "WarpData")
                     self.addItem(srcIndex, key + "WarpData", type, "", field, True)
 
-    def addBrother(self, index: QModelIndex, key: str, type: type, value: any, field: str, vaild: bool):
+    def addBrother(self, index: QModelIndex, key: str, type: type, value, field: str, valid: bool, ref_type=None):
         try:
             parentItem = index.parent().internalPointer()
             if parentItem is None:
                 parentItem = self.mRootItem
             self.beginInsertRows(index.parent(), parentItem.childCount(), parentItem.childCount())
-            brotherItem = QJsonTreeItem.newItem(parentItem, key, type, value, field, vaild)
+            brotherItem = QJsonTreeItem.newItem(parentItem, key, type, value, field, valid)
+            brotherItem.ref_type = ref_type
             parentItem.appendChild(key, brotherItem)
             self.endInsertRows()
         except Exception as ex:
@@ -804,7 +814,7 @@ class QJsonModel(QAbstractItemModel):
         #     childIndex = index.model().index(childItem.row(), 0, index)
         #     self.loopInsertJsonRow(childItem, childIndex)
 
-    def addItem(self, index: QModelIndex, key: str, type: type, value: any, field: str, vaild: bool):
+    def addItem(self, index: QModelIndex, key: str, type: type, value, field: str, valid: bool, ref_type=None):
         try:
             item = index.internalPointer()
             if item is None:
@@ -813,8 +823,9 @@ class QJsonModel(QAbstractItemModel):
                 childIndex = self.index(item.childRow(key), 0, index)
                 self.deleteItem(childIndex)
             self.beginInsertRows(index, item.childCount(), item.childCount())
-            childItem = QJsonTreeItem.newItem(item, key, type, value, field, vaild)
+            childItem = QJsonTreeItem.newItem(item, key, type, value, field, valid)
             childItem.setVaild(True)
+            childItem.ref_type = ref_type
             item.appendChild(key, childItem)
             item.setVaild(True)
             self.endInsertRows()
@@ -942,12 +953,19 @@ class QJsonModel(QAbstractItemModel):
 
                 if item.field() == "WarpRef":
                     v: str = item.value()
-                    if v in DataBase.AllGuidPlainRev:
-                        return DataBase.AllGuidPlainRev[item.value()]
 
                     if (t := resolve_ref_type(v)) is not None:
                         if (d := DataBase.AllScriptableObjectRev.get(t)) is not None and (r := d.get(v)):
                             return r
+
+                    if t := item.ref_type:
+                        names = DataBase.AllObjNameBase.get(t)
+                        if names is not None:
+                            if (n := names.get(v)) is not None:
+                                return n
+
+                    if v in DataBase.AllGuidPlainRev:
+                        return DataBase.AllGuidPlainRev[v]
 
                 if item.field() in DataBase.AllEnumRev:
                     if item.value() in DataBase.AllEnumRev[item.field()]:

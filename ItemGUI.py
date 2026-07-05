@@ -660,6 +660,8 @@ class ItemGUI(QWidget, Ui_Item):
                 return
 
     def addRefItem(self, data: str, item, index: QModelIndex):
+        field = item.field()
+
         if data == "":
             if item.type() == "list":
                 reply = QMessageBox.question(self, self.tr('Warning'),
@@ -668,7 +670,8 @@ class ItemGUI(QWidget, Ui_Item):
                 if reply != QMessageBox.Yes:
                     return
             self.model.addRefWarp(index, data)
-        elif item.field() in DataBase.RefGuidList:
+
+        elif field in DataBase.RefGuidList:
             if item.field() == "CardData":
                 if data in DataBase.AllCardData:
                     self.model.addRefWarp(index, DataBase.AllCardData[data])
@@ -677,10 +680,8 @@ class ItemGUI(QWidget, Ui_Item):
                 if data in DataBase.AllGuid[item.field()]:
                     self.model.addRefWarp(index, DataBase.AllGuid[item.field()][data])
                     return
-        elif item.field() in DataBase.RefNameList:
-            self.model.addRefWarp(index, data)
 
-        elif item.field() == "ScriptableObject":
+        elif field == "ScriptableObject":
             if (t := resolve_ref_type(data)) is None:
                 QMessageBox.warning(self, self.tr('Warning'), self.tr('Unspecified type, should be "Type|DataKey"'))
             elif (d := DataBase.AllScriptableObject.get(t)) is None:
@@ -693,7 +694,9 @@ class ItemGUI(QWidget, Ui_Item):
                 self.model.addRefWarp(index, data)
             else:
                 self.model.addRefWarp(index, v)
-            return
+
+        elif field in DataBase.RefNameList:
+            self.model.addRefWarp(index, remove_postfix(data))
 
     @log_exception(True)
     def on_addRefItem(self, checked: bool = False) -> None:
