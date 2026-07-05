@@ -47,43 +47,44 @@ class ItemGUI(QWidget, Ui_Item):
         self.addSpecialButton()
 
     def addSpecialButton(self):
-        if self.field == "CardData":
-            tabButton = QPushButton(self.tr("Add blueprint main group"), self)
-            tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
-            self.horizontalLayout.insertWidget(2, tabButton)
-            subTabButton = QPushButton(self.tr("Add blueprint sub group"), self)
-            subTabButton.clicked.connect(self.on_tabButtonCardDataSubTabGroup)
-            self.horizontalLayout.insertWidget(3, subTabButton)
-            label = QLabel(self.tr("<-Don't add that cardtype are not blueprint"))
-            self.horizontalLayout.insertWidget(4, label)
-            subGpTabButton = QPushButton(self.tr("Add the CardTabGroup which it belong"), self)
-            subGpTabButton.clicked.connect(self.on_tabButtonCardDataGpTabGroup)
-            self.horizontalLayout.insertWidget(5, subGpTabButton)
-            cardFilterGroupButton = QPushButton(self.tr("Add the CardFilterGroup which it belong"), self)
-            cardFilterGroupButton.clicked.connect(self.on_tabButtonCardDataCardFilterGroup)
-            self.horizontalLayout.insertWidget(6, cardFilterGroupButton)
-        if self.field == "CharacterPerk":
-            tabButton = QPushButton(self.tr("Add perk exclusive group"), self)
-            self.horizontalLayout.insertWidget(2, tabButton)
-            tabButton.clicked.connect(self.on_tabButtonCharacterPerk)
-        if self.field == "GameStat":
-            tabButton = QPushButton(self.tr("Add displayable status group"), self)
-            self.horizontalLayout.insertWidget(2, tabButton)
-            tabButton.clicked.connect(self.on_tabButtonGameStat)
-        if self.field == "CardTabGroup":
-            tabButton = QPushButton(self.tr("Add blueprint main group"), self)
-            tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
-            self.horizontalLayout.insertWidget(2, tabButton)
-            # addTagButton = QPushButton(self.tr("Add tag in IncludedCards"), self)
-            # self.horizontalLayout.insertWidget(3, addTagButton)
-            # addTagButton.clicked.connect(self.on_addTagButtonCardTabGroupIncludedCards)
-            # delTagButton = QPushButton(self.tr("Del tag in IncludedCards"), self)
-            # self.horizontalLayout.insertWidget(4, delTagButton)
-            # delTagButton.clicked.connect(self.on_delTagButtonCardTabGroupIncludedCards)
-        if self.field == "PlayerCharacter":
-            tabButton = QPushButton(self.tr("Add character journal"), self)
-            tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
-            self.horizontalLayout.insertWidget(2, tabButton)
+        pass
+        # if self.field == "CardData":
+        #     tabButton = QPushButton(self.tr("Add blueprint main group"), self)
+        #     tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
+        #     self.horizontalLayout.insertWidget(2, tabButton)
+        #     subTabButton = QPushButton(self.tr("Add blueprint sub group"), self)
+        #     subTabButton.clicked.connect(self.on_tabButtonCardDataSubTabGroup)
+        #     self.horizontalLayout.insertWidget(3, subTabButton)
+        #     label = QLabel(self.tr("<-Don't add that cardtype are not blueprint"))
+        #     self.horizontalLayout.insertWidget(4, label)
+        #     subGpTabButton = QPushButton(self.tr("Add the CardTabGroup which it belong"), self)
+        #     subGpTabButton.clicked.connect(self.on_tabButtonCardDataGpTabGroup)
+        #     self.horizontalLayout.insertWidget(5, subGpTabButton)
+        #     cardFilterGroupButton = QPushButton(self.tr("Add the CardFilterGroup which it belong"), self)
+        #     cardFilterGroupButton.clicked.connect(self.on_tabButtonCardDataCardFilterGroup)
+        #     self.horizontalLayout.insertWidget(6, cardFilterGroupButton)
+        # if self.field == "CharacterPerk":
+        #     tabButton = QPushButton(self.tr("Add perk exclusive group"), self)
+        #     self.horizontalLayout.insertWidget(2, tabButton)
+        #     tabButton.clicked.connect(self.on_tabButtonCharacterPerk)
+        # if self.field == "GameStat":
+        #     tabButton = QPushButton(self.tr("Add displayable status group"), self)
+        #     self.horizontalLayout.insertWidget(2, tabButton)
+        #     tabButton.clicked.connect(self.on_tabButtonGameStat)
+        # if self.field == "CardTabGroup":
+        #     tabButton = QPushButton(self.tr("Add blueprint main group"), self)
+        #     tabButton.clicked.connect(self.on_tabButtonCardDataMainTabGroup)
+        #     self.horizontalLayout.insertWidget(2, tabButton)
+        #     # addTagButton = QPushButton(self.tr("Add tag in IncludedCards"), self)
+        #     # self.horizontalLayout.insertWidget(3, addTagButton)
+        #     # addTagButton.clicked.connect(self.on_addTagButtonCardTabGroupIncludedCards)
+        #     # delTagButton = QPushButton(self.tr("Del tag in IncludedCards"), self)
+        #     # self.horizontalLayout.insertWidget(4, delTagButton)
+        #     # delTagButton.clicked.connect(self.on_delTagButtonCardTabGroupIncludedCards)
+        # if self.field == "PlayerCharacter":
+        #     tabButton = QPushButton(self.tr("Add character journal"), self)
+        #     tabButton.clicked.connect(self.on_tabButtonPlayerCharacterJournalName)
+        #     self.horizontalLayout.insertWidget(2, tabButton)
 
     def setTabKey(self, key: str):
         self.tab_key = key
