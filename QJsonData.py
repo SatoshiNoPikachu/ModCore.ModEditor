@@ -269,7 +269,7 @@ class QJsonTreeItem(object):
                 else:
                     child = QJsonTreeItem.load(v, "", rootItem, key)
                     child.setStatus("Deprecated")
-                child.setKey(key)
+                # child.setKey(key)
                 try:
                     child.setType(v.type())
                 except AttributeError:
