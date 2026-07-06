@@ -675,8 +675,6 @@ class ItemGUI(QWidget, Ui_Item):
                 if data in DataBase.AllGuid[item.field()]:
                     self.model.addRefWarp(index, DataBase.AllGuid[item.field()][data])
                     return
-        elif item.field() in DataBase.RefNameList:
-            self.model.addRefWarp(index, data)
         elif item.field() == "ScriptableObject":
             if data in DataBase.AllScriptableObject:
                 self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
@@ -687,6 +685,8 @@ class ItemGUI(QWidget, Ui_Item):
                 if reply == QMessageBox.Yes:
                     self.model.addRefWarp(index, data)
             return
+        elif item.field() in DataBase.RefNameList:
+            self.model.addRefWarp(index, data)
 
     @log_exception(True)
     def on_addRefItem(self, checked: bool = False) -> None:

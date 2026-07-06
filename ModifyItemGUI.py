@@ -245,13 +245,13 @@ class ModifyItemGUI(ItemGUI):
                     self.addWarpItem(index, "Ref", DataBase.AllGuid[item.field()][data])
                     # self.model.addRefWarp(index, DataBase.AllGuid[item.field()][data])
                     return
-        elif item.field() in DataBase.RefNameList:
-            self.addWarpItem(index, "Ref", data)
-            # self.model.addRefWarp(index, data)
         elif item.field() == "ScriptableObject":
             self.addWarpItem(index, "Ref", DataBase.AllScriptableObject[data])
             # self.model.addRefWarp(index, DataBase.AllScriptableObject[data])
             return
+        elif item.field() in DataBase.RefNameList:
+            self.addWarpItem(index, "Ref", data)
+            # self.model.addRefWarp(index, data)
 
     @log_exception(True)
     def on_addAddRefItem(self, checked: bool = False) -> None:
