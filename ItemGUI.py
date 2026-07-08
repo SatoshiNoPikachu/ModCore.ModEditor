@@ -687,7 +687,7 @@ class ItemGUI(QWidget, Ui_Item):
                 QMessageBox.warning(self, self.tr('Warning'), self.tr('Unspecified type, should be "Type|DataKey"'))
             elif (d := DataBase.AllScriptableObject.get(t)) is None:
                 reply = QMessageBox.question(self, self.tr('Information'),
-                                             self.tr(f'Type {t} not found, still reference?'),
+                                             self.tr("Type %s not found, still reference?") % t,
                                              QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
                 if reply == QMessageBox.Yes:
                     self.model.addRefWarp(index, data)
