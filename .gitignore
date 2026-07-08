@@ -11,3 +11,4 @@ Mods/
 *.rar
 .idea
 config_mc.ini
+venv/
