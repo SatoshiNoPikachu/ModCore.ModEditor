@@ -76,6 +76,7 @@ class DataBase(DataPack):
 
     AllSimpCn = {}  # DataBase.AllSimpCn[key] -> {origin, trans}
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
+    AllModSimpCn = {}
 
     AutoCompleteUpdate = False
     LocalizationFileName = "En.csv"
@@ -94,9 +95,9 @@ class DataBase(DataPack):
             os.mkdir(DataBase.DataDir + "/Mods")
 
         DataBase.load_packs(data_dir)
-        DataBase.loadSpecialTypeField()
-        DataBase.loadCollection()
-        DataBase.loadGameSimpCn()
+        DataBase.load_special_type_field()
+        DataBase.load_collection()
+        DataBase.load_game_simp_cn()
 
     @staticmethod
     def LoadModData(mod_name, mod_dir):
@@ -152,7 +153,7 @@ class DataBase(DataPack):
                         DataBase.AllModSimpCn[f'{mod_name}_{keys[0]}'] = {"original": keys[1].replace('"', ''),
                                                                           "translate": keys[2].replace("\n", "")}
                     else:
-                        QtCore.qWarning(b"Wrong Format Key")
+                        QtCore.qWarning("Wrong Format Key")
 
         for p in path_mod.iterdir():
             if not p.is_dir():
@@ -397,14 +398,14 @@ class DataBase(DataPack):
                 cls.AllRef["Sprite"].append(f'{prefix}{file.stem}')
 
     @staticmethod
-    def loadSpecialTypeField():
+    def load_special_type_field():
         for key, item_list in DataBase.AllSpecialTypeField.items():
             if key in DataBase.AllTypeField:
                 for item in item_list:
                     DataBase.AllTypeField[key][item] = "SpecialWarp"
 
     @staticmethod
-    def loadCollection():
+    def load_collection():
         if os.path.exists(DataBase.DataDir + r"/Mods/" + r"Collection.json"):
             with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "r", encoding='utf-8') as f:
                 DataBase.AllCollection = json.load(f)
@@ -419,7 +420,7 @@ class DataBase(DataPack):
                 DataBase.AllListCollection = json.load(f)
 
     @staticmethod
-    def saveCollection():
+    def save_collection():
         with open(DataBase.DataDir + r"/Mods/" + r"Collection.json", "w", encoding='utf-8') as f:
             json.dump(DataBase.AllCollection, f)
 
@@ -427,7 +428,7 @@ class DataBase(DataPack):
             json.dump(DataBase.AllListCollection, f)
 
     @staticmethod
-    def loopLoadModSimpCn(json, mod_name: str, simpCn_dict: dict = None):
+    def loop_load_mod_simp_cn(json, mod_name: str, simpCn_dict: dict = None):
         if type(json) is dict:
             for key, item in json.items():
                 if type(item) == str:
@@ -448,15 +449,15 @@ class DataBase(DataPack):
                                     DataBase.AllModSimpCn[item]["original"] = json["DefaultText"]
                 elif type(item) == list:
                     for sub_item in item:
-                        DataBase.loopLoadModSimpCn(sub_item, mod_name, simpCn_dict)
+                        DataBase.loop_load_mod_simp_cn(sub_item, mod_name, simpCn_dict)
                 elif type(item) == dict:
-                    DataBase.loopLoadModSimpCn(item, mod_name, simpCn_dict)
+                    DataBase.loop_load_mod_simp_cn(item, mod_name, simpCn_dict)
         elif type(json) is list:
             for value in json:
-                DataBase.loopLoadModSimpCn(value, mod_name, simpCn_dict)
+                DataBase.loop_load_mod_simp_cn(value, mod_name, simpCn_dict)
 
     @staticmethod
-    def loadModSimpCn(mod_dir):
+    def load_mod_simp_cn(mod_dir):
         p = Path(mod_dir)
         if p.name == "Data":
             p = p.parent
@@ -486,11 +487,11 @@ class DataBase(DataPack):
                     else:
                         DataBase.AllModSimpCn[k]["translate"] = keys[2].replace("\n", "")
                 else:
-                    QtCore.qWarning(b"Wrong Format Key")
+                    QtCore.qWarning("Wrong Format Key")
 
     @staticmethod
-    def autoTranslationDuplicates(mod_dir):
-        DataBase.loadModSimpCn(mod_dir)
+    def auto_translation_duplicates(mod_dir):
+        DataBase.load_mod_simp_cn(mod_dir)
         if len(DataBase.AllTranDict) == 0:
             for item in DataBase.AllSimpCn.values():
                 if not item["original"] in DataBase.AllTranDict and "translate" in item and item["translate"] != "":
@@ -502,42 +503,42 @@ class DataBase(DataPack):
             if "translate" in item and item["translate"] == "":
                 if item["original"] in DataBase.AllTranDict:
                     item["translate"] = DataBase.AllTranDict[item["original"]]
-        DataBase.saveModSimpCn(mod_dir, False)
+        DataBase.save_mod_simp_cn(mod_dir, False)
 
     @staticmethod
-    def deleteObsolete(mod_dir: str, mod_name: str):
-        DataBase.loadModSimpCn(mod_dir)
+    def delete_obsolete(mod_dir: str, mod_name: str):
+        DataBase.load_mod_simp_cn(mod_dir)
         files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
         ModSimpCnDict = {}
         for file in files:
             try:
                 with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    DataBase.loopLoadModSimpCn(data, mod_name, ModSimpCnDict)
+                    DataBase.loop_load_mod_simp_cn(data, mod_name, ModSimpCnDict)
             except Exception as ex:
-                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+                QtCore.qWarning(traceback.format_exc())
         obsolete_keys = set(DataBase.AllModSimpCn.keys()).difference(ModSimpCnDict.keys())
         for key in obsolete_keys:
             del DataBase.AllModSimpCn[key]
-        DataBase.saveModSimpCn(mod_dir, False)
+        DataBase.save_mod_simp_cn(mod_dir, False)
 
     @staticmethod
-    def formatAllLocalizationKey(mod_dir: str, mod_name: str):
-        DataBase.loadModSimpCn(mod_dir)
+    def format_all_localization_key(mod_dir: str, mod_name: str):
+        DataBase.load_mod_simp_cn(mod_dir)
         files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
         for file in files:
             try:
                 with open(file, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    DataBase.loopFormatSimpCn(data, mod_name)
+                    DataBase.loop_format_simp_cn(data, mod_name)
                 with open(file, "w", encoding="utf-8") as f:
                     json.dump(data, f, sort_keys=True, indent=4, ensure_ascii=False)
             except Exception as ex:
-                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
-        DataBase.saveModSimpCn(mod_dir, False)
+                QtCore.qWarning(traceback.format_exc())
+        DataBase.save_mod_simp_cn(mod_dir, False)
 
     @staticmethod
-    def dumpAllJsonFileWithoutEnsureAscii(mod_dir: str, mod_name: str):
+    def dump_all_json_file_without_ensure_ascii(mod_dir: str, mod_name: str):
         files = [y for x in os.walk(mod_dir) for y in glob(os.path.join(x[0], '*.json'))]
         for file in files:
             try:
@@ -546,10 +547,10 @@ class DataBase(DataPack):
                 with open(file, "w", encoding="utf-8") as f:
                     json.dump(data, f, sort_keys=True, indent=4, ensure_ascii=False)
             except Exception as ex:
-                QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+                QtCore.qWarning(traceback.format_exc())
 
     @staticmethod
-    def loopFormatSimpCn(json, mod_name: str):
+    def loop_format_simp_cn(json, mod_name: str):
         if type(json) is dict:
             for key, item in json.items():
                 if type(item) == str:
@@ -564,15 +565,15 @@ class DataBase(DataPack):
                                 DataBase.AllModSimpCn[json[key]]["original"] = json["DefaultText"]
                 elif type(item) == list:
                     for sub_item in item:
-                        DataBase.loopFormatSimpCn(sub_item, mod_name)
+                        DataBase.loop_format_simp_cn(sub_item, mod_name)
                 elif type(item) == dict:
-                    DataBase.loopFormatSimpCn(item, mod_name)
+                    DataBase.loop_format_simp_cn(item, mod_name)
         elif type(json) is list:
             for value in json:
-                DataBase.loopFormatSimpCn(value, mod_name)
+                DataBase.loop_format_simp_cn(value, mod_name)
 
     @staticmethod
-    def saveModSimpCn(mod_dir, loadSrc: bool = True):
+    def save_mod_simp_cn(mod_dir, loadSrc: bool = True):
         p = Path(mod_dir)
         if p.name == "Data":
             p = p.parent
@@ -584,7 +585,7 @@ class DataBase(DataPack):
         prefixLen = len(prefix)
 
         if loadSrc:
-            DataBase.loadModSimpCn(mod_dir)
+            DataBase.load_mod_simp_cn(mod_dir)
         with p.open("w", encoding='utf-8') as f:
             for key in DataBase.AllModSimpCn:
                 if key.startswith(prefix):
@@ -598,7 +599,7 @@ class DataBase(DataPack):
                 f.write('\n')
 
     @staticmethod
-    def loadGameSimpCn():
+    def load_game_simp_cn():
         try:
             p = DataBase.MainPack.path / 'SimpCn.csv'
             if not p.exists():
@@ -625,6 +626,6 @@ class DataBase(DataPack):
                         else:
                             DataBase.AllSimpCn[keys[0]]["translate"] = keys[2].replace("\n", "")
                     else:
-                        QtCore.qWarning(bytes("Wrong Format Key" + line, encoding="utf-8"))
+                        QtCore.qWarning("Wrong Format Key" + line)
         except Exception as ex:
-            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+            QtCore.qWarning(traceback.format_exc())
