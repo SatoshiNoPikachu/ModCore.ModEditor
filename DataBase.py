@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import csv
 from pathlib import Path
 import ujson as json
 import os
@@ -456,38 +456,17 @@ class DataBase(DataPack):
             for value in json:
                 DataBase.loop_load_mod_simp_cn(value, mod_name, simpCn_dict)
 
-    @staticmethod
-    def load_mod_simp_cn(mod_dir):
+    @classmethod
+    def load_mod_simp_cn(cls, mod_dir):
         p = Path(mod_dir)
         if p.name == "Data":
             p = p.parent
-        p = p / f"Resource/Localization/{DataBase.LocalizationFileName}"
+        p = p / f"Resource/Localization/{cls.LocalizationFileName}"
         if not p.exists():
             return
 
-        with p.open("r", encoding='utf-8') as f:
-            lines = f.readlines(-1)
-            for line in lines:
-                keys = line.split(',')
-                if len(keys) > 3 and line.find('"') != -1:
-                    new_keys = line.split('"')
-                    if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                        k = f'{DataBase.CurModName}_{new_keys[0][:-1]}'
-                        if k not in DataBase.AllModSimpCn:
-                            DataBase.AllModSimpCn[k] = {"original": new_keys[1].replace('"', ''),
-                                                        "translate": new_keys[2][1:].replace("\n", "")}
-                        else:
-                            DataBase.AllModSimpCn[k]["translate"] = new_keys[2][1:].replace("\n", "")
-                elif len(keys) == 3:
-                    k = f'{DataBase.CurModName}_{keys[0]}'
-
-                    if k not in DataBase.AllModSimpCn:
-                        DataBase.AllModSimpCn[k] = {"original": keys[1].replace('"', ''),
-                                                    "translate": keys[2].replace("\n", "")}
-                    else:
-                        DataBase.AllModSimpCn[k]["translate"] = keys[2].replace("\n", "")
-                else:
-                    QtCore.qWarning("Wrong Format Key")
+        for key, dt in cls.read_l10n_file(p):
+            cls.AllModSimpCn[f'{cls.CurModName}_{key}'] = dt
 
     @staticmethod
     def auto_translation_duplicates(mod_dir):
@@ -598,34 +577,35 @@ class DataBase(DataPack):
                 f.write(DataBase.AllModSimpCn[key]["translate"].replace("\n", "\\n").replace("\t", "\\t"))
                 f.write('\n')
 
-    @staticmethod
-    def load_game_simp_cn():
-        try:
-            p = DataBase.MainPack.path / 'SimpCn.csv'
-            if not p.exists():
-                return
+    @classmethod
+    @log_exception()
+    def load_game_simp_cn(cls):
+        p = cls.MainPack.path / 'SimpCn.csv'
+        if not p.exists():
+            return
 
-            with p.open('r', encoding='utf-8') as f:
-                lines = f.readlines(-1)
-                for line in lines:
-                    keys = line.split(',')
-                    if len(keys) > 3 and line.find('"') != -1:
-                        new_keys = line.split('"')
-                        if len(new_keys) == 3 and new_keys[0][-1] == ',' and new_keys[2][0] == ',':
-                            if new_keys[0][:-1] not in DataBase.AllSimpCn:
-                                DataBase.AllSimpCn[new_keys[0][:-1]] = {"original": new_keys[1].replace('"', ''),
-                                                                        "translate": new_keys[2][1:].replace("\n",
-                                                                                                             "")}
-                            else:
-                                DataBase.AllSimpCn[new_keys[0][:-1]]["translate"] = new_keys[2][1:].replace("\n",
-                                                                                                            "")
-                    elif len(keys) == 3:
-                        if keys[0] not in DataBase.AllSimpCn:
-                            DataBase.AllSimpCn[keys[0]] = {"original": keys[1].replace('"', ''),
-                                                           "translate": keys[2].replace("\n", "")}
-                        else:
-                            DataBase.AllSimpCn[keys[0]]["translate"] = keys[2].replace("\n", "")
-                    else:
-                        QtCore.qWarning("Wrong Format Key" + line)
-        except Exception as ex:
-            QtCore.qWarning(traceback.format_exc())
+        for key, dt in cls.read_l10n_file(p, cls.LocalizationFileName == 'En.csv'):
+            if not dt['translate']:
+                continue
+
+            cls.AllSimpCn[key] = dt
+
+    @classmethod
+    def read_l10n_file(cls, path: Path, reverse=False):
+        with path.open('r', encoding='utf-8', newline='') as f:
+            reader = csv.reader(f)
+
+            for row in reader:
+                row_len = len(row)
+                if row_len < 2:
+                    QtCore.qWarning(f'Localization error line: {reader.line_num}')
+                    continue
+
+                if row_len == 2:
+                    yield row[0], {'original': row[1], 'translate': ''}
+                    continue
+
+                if reverse:
+                    yield row[0], {'original': row[-1], 'translate': row[1]}
+                else:
+                    yield row[0], {'original': row[1], 'translate': row[-1]}
