@@ -1064,7 +1064,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         name = get_mod_display_name(mod_info)
         version = get_mod_version(mod_info)
-        if version:
+        if not version:
             self.setWindowTitle("%s (%s)" % (self.srcTitle, name))
         else:
             self.setWindowTitle("%s (%s)" % (self.srcTitle, f'{name} v{version}'))
