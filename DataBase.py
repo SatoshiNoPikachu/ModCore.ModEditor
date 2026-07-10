@@ -19,18 +19,21 @@ def replace_l10n_key(data: dict, mod_name: str, obj_name: str, guid: str = "",
         return
     elif not isinstance(data, dict):
         return
-    for key in data.keys():
-        if key == "LocalizationKey" and data[key] != "":
-            entry = data[key][data[key].rfind("_"):]
+    for key, v in data.items():
+        if key == "LocalizationKey" and v != "":
+            if DataBase.ReplaceDefText and 'DefaultText' in data and (dt := DataBase.AllSimpCn.get(v)):
+                data['DefaultText'] = dt['original']
+
+            entry = v[v.rfind("_"):]
             if entry_key != "" and index > 0:
                 st_idx = entry.rfind(entry_key)
                 end_idx = entry[st_idx:].find("]") + st_idx
                 entry = entry[:st_idx + len(entry_key) + 1] + str(index) + entry[end_idx:]
             data[key] = mod_name + "_" + obj_name + entry
-        elif isinstance(data[key], dict):
-            replace_l10n_key(data[key], mod_name, obj_name, guid, entry_key, index)
-        elif isinstance(data[key], list):
-            for item in data[key]:
+        elif isinstance(v, dict):
+            replace_l10n_key(v, mod_name, obj_name, guid, entry_key, index)
+        elif isinstance(v, list):
+            for item in v:
                 replace_l10n_key(item, mod_name, obj_name, guid, entry_key, index)
         elif key == "ParentObjectID":
             data["ParentObjectID"] = ""
@@ -82,6 +85,7 @@ class DataBase(DataPack):
     LocalizationFileName = "En.csv"
     ModsWorkDir = ""
     EnableKeyAlias = True
+    ReplaceDefText = False
 
     def __init__(self):
         pass

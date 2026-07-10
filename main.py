@@ -138,6 +138,14 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.config.set("Config", "EnableKeyAlias", "True")
             self.save_config()
 
+        if self.config.has_option('Config', 'ReplacingKeyWithDefText'):
+            DataBase.ReplaceDefText = DataBase.LocalizationFileName == 'En.csv' and self.config.getboolean("Config",
+                                                                                                           "ReplacingKeyWithDefText")
+        else:
+            DataBase.ReplaceDefText = DataBase.LocalizationFileName == 'En.csv'
+            self.config.set("Config", "ReplacingKeyWithDefText", "True")
+            self.save_config()
+
     @log_exception(True)
     def loadLanguage(self):
         if hasattr(self, "language") and self.language is not None and self.language:
