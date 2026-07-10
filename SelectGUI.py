@@ -18,25 +18,25 @@ class SelectGUI(QDialog, Ui_Select):
     Special = 4
     NewModify = 5
 
-    def __init__(self, parent=None, field_name: str = "", checked: bool = False, type: int = 0,
-                 auto_replace_key_guid: bool = False):
+    def __init__(self, parent=None, field_name: str = "", checked: bool = False, mode: int = 0,
+                 replace_key: bool = False):
         super(SelectGUI, self).__init__(parent)
         self.setupUi(self)
         self.field_name = field_name
         self.write_flag = False
-        self.auto_replace_key_guid = auto_replace_key_guid
+        self.replace_key = replace_key
         self.modify_type = None
         self.setWindowTitle(self.tr("Add ") + field_name + self.tr(" Reference Type"))
         self.checked_type = None
         self.use_def = False
 
-        if type == SelectGUI.NewData:
+        if mode == SelectGUI.NewData:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Template"))
             label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
-            if not self.auto_replace_key_guid:
+            if not self.replace_key:
                 self.buttonBox.addButton(QDialogButtonBox.StandardButton.YesToAll).setText(
                     self.tr("Auto Replace LocalizationKey"))
             else:
@@ -45,20 +45,20 @@ class SelectGUI(QDialog, Ui_Select):
             self.buttonBox.addButton(QDialogButtonBox.StandardButton.Yes).setText(
                 self.tr("Use Default Template"))
 
-        if type == SelectGUI.NewModify:
+        if mode == SelectGUI.NewModify:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
             label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
 
-        if type == SelectGUI.Copy:
+        if mode == SelectGUI.Copy:
             self.setWindowTitle(self.tr("Copy ") + field_name + self.tr(" Entries"))
 
-        if type == SelectGUI.Append:
+        if mode == SelectGUI.Append:
             self.setWindowTitle(self.tr("Append ") + field_name + self.tr(" Entries"))
 
-        if type == SelectGUI.Special:
+        if mode == SelectGUI.Special:
             self.setWindowTitle(self.tr("Add Special Entry"))
 
         try:
@@ -288,4 +288,4 @@ class SelectGUI(QDialog, Ui_Select):
 
         if button == self.buttonBox.button(QDialogButtonBox.YesToAll):
             self.write_flag = True
-            self.auto_replace_key_guid = not self.auto_replace_key_guid
+            self.replace_key = not self.replace_key

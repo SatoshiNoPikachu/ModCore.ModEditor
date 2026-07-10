@@ -37,7 +37,7 @@ class ModifyItemGUI(ItemGUI):
 
     @log_exception(True)
     def on_target_btn(self, checked: bool = False) -> None:
-        select = SelectGUI(self.treeView, field_name=self.field, type=SelectGUI.Ref)
+        select = SelectGUI(self.treeView, field_name=self.field, mode=SelectGUI.Ref)
         select.exec_()
 
         if not select.write_flag or not (text := remove_postfix(select.lineEdit.text())):
@@ -56,7 +56,7 @@ class ModifyItemGUI(ItemGUI):
 
     @log_exception(True)
     def on_cardTagButton(self, checked: bool = False) -> None:
-        select = SelectGUI(self.treeView, field_name="CardTag", type=SelectGUI.Ref)
+        select = SelectGUI(self.treeView, field_name="CardTag", mode=SelectGUI.Ref)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -74,7 +74,7 @@ class ModifyItemGUI(ItemGUI):
 
     @log_exception(True)
     def on_cardTypeButton(self, checked: bool = False) -> None:
-        select = SelectGUI(self.treeView, field_name="CardTypes", type=SelectGUI.Ref)
+        select = SelectGUI(self.treeView, field_name="CardTypes", mode=SelectGUI.Ref)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -298,7 +298,7 @@ class ModifyItemGUI(ItemGUI):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name=item.field(), type=SelectGUI.Ref)
+            select = SelectGUI(self.treeView, field_name=item.field(), mode=SelectGUI.Ref)
             select.exec_()
 
             if select.write_flag:

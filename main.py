@@ -54,7 +54,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         super(ModEditorGUI, self).__init__(parent)
 
         self.autoresize = None
-        self.auto_replace_key_guid = None
+        self.replace_key = None
         self.last_open_dir = None
         self.language = None
         self.config = None
@@ -98,10 +98,10 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             self.save_config()
 
         if self.config.has_option("Config", "AutoReplace_LocalizationKey_ParentObjectID"):
-            self.auto_replace_key_guid = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
+            self.replace_key = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
         else:
-            self.auto_replace_key_guid = True
-            self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
+            self.replace_key = True
+            self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.replace_key))
             self.save_config()
 
         if self.config.has_option("Config", "AutoResize"):
@@ -173,7 +173,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
 
-        if self.auto_replace_key_guid:
+        if self.replace_key:
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
         else:
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
@@ -278,13 +278,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def on_actionAutoReplace(self, checked: bool = False):
-        if self.auto_replace_key_guid:
-            self.auto_replace_key_guid = False
+        if self.replace_key:
+            self.replace_key = False
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
         else:
-            self.auto_replace_key_guid = True
+            self.replace_key = True
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
-        self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.auto_replace_key_guid))
+        self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.replace_key))
         self.save_config()
 
     @log_exception(True)
@@ -517,7 +517,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         type_name = self.file_model.fileName(index)
         file_path = self.file_model.filePath(index)
 
-        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, type=SelectGUI.SelectGUI.NewData)
+        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, mode=SelectGUI.SelectGUI.NewData,
+                                     replace_key=self.replace_key)
         select.exec_()
 
         if not select.write_flag:
@@ -551,10 +552,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             elif name and template_key:
 
                 with open(DataBase.AllPath[type_name][template_key], "r", encoding='utf-8') as f:
-                    temp_data = f.read(-1)
+                    temp_data = json.load(f)
+
+                if select.replace_key and self.replace_key:
+                    replace_l10n_key(temp_data, self.mod_info["Namespace"], name)
 
                 with path.open("w", encoding='utf-8') as f:
-                    f.write(temp_data)
+                    json.dump(temp_data, f, sort_keys=True, ensure_ascii=False)
 
         except Exception as ex:
             QtCore.qWarning(traceback.format_exc())
@@ -577,8 +581,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         file_path = self.file_model.filePath(index)
         type_name = self.file_model.fileName(top_parent)
 
-        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, type=SelectGUI.SelectGUI.NewData,
-                                     auto_replace_key_guid=self.auto_replace_key_guid)
+        select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, mode=SelectGUI.SelectGUI.NewData,
+                                     replace_key=self.replace_key)
         select.exec_()
 
         if not select.write_flag:
@@ -616,7 +620,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
                 temp_json["UniqueID"] = str(uuid.uuid4()).replace("-", "")
 
-                if select.auto_replace_key_guid and self.auto_replace_key_guid:
+                if select.replace_key and self.replace_key:
                     replace_l10n_key(temp_json, self.mod_info["Namespace"], name)
 
                 with path.open("w", encoding='utf-8') as f:
@@ -644,7 +648,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         top_name = self.file_model.fileName(top_parent)
 
         group_name = top_name
-        select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewModify)
+        select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, mode=SelectGUI.SelectGUI.NewModify)
         select.exec_()
 
         if not select.write_flag:
@@ -705,7 +709,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             return
 
         group_name = top_name
-        select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, type=SelectGUI.SelectGUI.NewModify)
+        select = SelectGUI.SelectGUI(self, field_name=group_name, checked=False, mode=SelectGUI.SelectGUI.NewModify)
         select.exec_()
 
         if not select.write_flag:
@@ -860,7 +864,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key,
                                                    item_name=file_name[:-5], guid=guid,
                                                    auto_resize=self.autoresize,
-                                                   auto_replace_key_guid=self.auto_replace_key_guid,
+                                                   auto_replace_key_guid=self.replace_key,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
 
@@ -887,7 +891,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=data_type, key=tab_key,
                                                    item_name=file_name[:-5], auto_resize=self.autoresize,
-                                                   auto_replace_key_guid=self.auto_replace_key_guid,
+                                                   auto_replace_key_guid=self.replace_key,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
 
@@ -900,7 +904,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         guid = ""
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5],
                                        guid=guid,
-                                       auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid,
+                                       auto_resize=self.autoresize, auto_replace_key_guid=self.replace_key,
                                        mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             elif top_name == "ScriptableObject":
@@ -914,7 +918,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 top2nd_name = self.file_model.fileName(top2nd_parent)
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5],
                                        guid=guid,
-                                       auto_resize=self.autoresize, auto_replace_key_guid=self.auto_replace_key_guid,
+                                       auto_resize=self.autoresize, auto_replace_key_guid=self.replace_key,
                                        mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             else:

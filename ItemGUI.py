@@ -91,7 +91,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonPlayerCharacterJournalName(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="PlayerCharacterJournalName", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="PlayerCharacterJournalName", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -101,7 +101,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonCardDataMainTabGroup(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="BlueprintCardDataCardTabGroup", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="BlueprintCardDataCardTabGroup", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -135,7 +135,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonCardDataSubTabGroup(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="BlueprintCardDataCardTabSubGroup", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="BlueprintCardDataCardTabSubGroup", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -145,7 +145,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonCharacterPerk(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="CharacterPerkPerkGroup", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="CharacterPerkPerkGroup", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -155,7 +155,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonCardDataGpTabGroup(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="ItemCardDataCardTabGpGroup", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="ItemCardDataCardTabGpGroup", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -175,7 +175,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonCardDataCardFilterGroup(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="CardDataCardFilterGroup", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="CardDataCardFilterGroup", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -193,7 +193,7 @@ class ItemGUI(QWidget, Ui_Item):
 
     @log_exception(True)
     def on_tabButtonGameStat(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="VisibleGameStatStatListTab", type=SelectGUI.Special)
+        select = SelectGUI(self.treeView, field_name="VisibleGameStatStatListTab", mode=SelectGUI.Special)
         select.exec_()
 
         if select.write_flag and select.lineEdit.text():
@@ -381,7 +381,7 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name=self.field, type=SelectGUI.Append)
+            select = SelectGUI(self.treeView, field_name=self.field, mode=SelectGUI.Append)
             select.exec_()
 
             if select.write_flag:
@@ -616,7 +616,7 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name=self.field, type=SelectGUI.Copy)
+            select = SelectGUI(self.treeView, field_name=self.field, mode=SelectGUI.Copy)
             select.exec_()
 
             if select.write_flag:
@@ -709,7 +709,7 @@ class ItemGUI(QWidget, Ui_Item):
             else:
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            select = SelectGUI(self.treeView, field_name=item.field(), type=SelectGUI.Ref)
+            select = SelectGUI(self.treeView, field_name=item.field(), mode=SelectGUI.Ref)
             select.exec_()
 
             if select.write_flag:

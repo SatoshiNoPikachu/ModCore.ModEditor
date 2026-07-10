@@ -52,7 +52,7 @@ class ItemDelegate(QItemDelegate):
 
     def createSelectEditor(self, parent: QWidget, option: 'QStyleOptionViewItem', index: QModelIndex, field_name="",
                            type=SelectGUI.Ref) -> QWidget:
-        editor = SelectGUI(parent, field_name=field_name, type=type)
+        editor = SelectGUI(parent, field_name=field_name, mode=type)
         return editor
 
     def setEditorData(self, editor: QWidget, index: QModelIndex) -> None:
