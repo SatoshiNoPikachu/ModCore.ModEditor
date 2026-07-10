@@ -46,7 +46,7 @@ import SelectGUI
 import ExportToZip
 from glob import glob
 
-ModEditorVersion = "1.1.2"
+ModEditorVersion = "1.1.3"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
