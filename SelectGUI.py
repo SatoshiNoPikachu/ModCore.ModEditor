@@ -90,9 +90,7 @@ class SelectGUI(QDialog, Ui_Select):
                     self.comboBox.addItems(DataBase.AllRef["CardData"][key])
                     ref_list.extend(DataBase.AllRef["CardData"][key])
                     self.horizontalLayout_CheckBox.addWidget(check_box)
-                for i, key in enumerate(DataBase.AllGuid.keys()):
-                    if key == "CardData":
-                        continue
+                for i, key in enumerate(k for k in DataBase.AllGuid if k != 'CardData'):
                     check_box = QCheckBox()
                     check_box.setText(key)
                     if checked:
@@ -125,7 +123,7 @@ class SelectGUI(QDialog, Ui_Select):
                     #     keys = data if isinstance(data, list) else []
                     # ref_list.extend(keys)
 
-                    self.horizontalLayout_CheckBox2.addWidget(check_box, i // 12, i % 12)
+                    self.horizontalLayout_CheckBox2.addWidget(check_box, i // 10, i % 10)
                 self.m_completer = QCompleter(ref_list, self)
 
             elif self.field_name == "ScriptableObject":
