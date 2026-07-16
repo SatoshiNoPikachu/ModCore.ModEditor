@@ -20,7 +20,7 @@ def log_exception(MsgBox: bool = False):
                 msg = traceback.format_exc()
                 if MsgBox:
                     QMessageBox.warning(None, "Warning", msg, QMessageBox.Yes, QMessageBox.Yes)
-                QtCore.qWarning(bytes(msg, encoding="utf-8"))
+                QtCore.qWarning(msg)
 
         return inner_function
 

@@ -10,5 +10,5 @@ Mods/
 *.log
 *.rar
 .idea
-config_mc.ini
+settings.yml
 venv/

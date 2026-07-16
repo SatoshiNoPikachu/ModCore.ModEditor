@@ -6,6 +6,7 @@ import os
 import copy
 from glob import glob
 
+from Config import Config
 from DataPack import DataPack
 from utils import *
 from MyLogger import *
@@ -21,7 +22,7 @@ def replace_l10n_key(data: dict, mod_name: str, obj_name: str, guid: str = "",
         return
     for key, v in data.items():
         if key == "LocalizationKey" and v != "":
-            if DataBase.ReplaceDefText and 'DefaultText' in data and (dt := DataBase.AllSimpCn.get(v)):
+            if Config.ReplaceDefText and 'DefaultText' in data and (dt := DataBase.AllSimpCn.get(v)):
                 data['DefaultText'] = dt['original']
 
             entry = v[v.rfind("_"):]
@@ -81,12 +82,6 @@ class DataBase(DataPack):
     AllTranDict = {}  # DataBase.AllTranDict[origin] -> trans
     AllModSimpCn = {}
 
-    AutoCompleteUpdate = False
-    LocalizationFileName = "En.csv"
-    ModsWorkDir = ""
-    EnableKeyAlias = True
-    ReplaceDefText = False
-
     def __init__(self):
         pass
 
@@ -140,7 +135,7 @@ class DataBase(DataPack):
 
         DataBase.load_mod_tex(path_tex, f'{mod_name}:')
 
-        path_lz = path_root / f"Resource/Localization/{DataBase.LocalizationFileName}"
+        path_lz = path_root / f"Resource/Localization/{Config.L10nFileName}.csv"
         if path_lz.exists() and path_lz.is_file():
             with path_lz.open("r", encoding='utf-8') as f:
                 lines = f.readlines(-1)
@@ -233,10 +228,10 @@ class DataBase(DataPack):
 
     @classmethod
     def load_mods_work_dir(cls):
-        if cls.ModsWorkDir == "":
+        if Config.ModsWorkDir == "":
             return
 
-        path_mwd = Path(cls.ModsWorkDir)
+        path_mwd = Path(Config.ModsWorkDir)
         if not path_mwd.is_absolute():
             path_mwd = Path(cls.DataDir) / path_mwd
 
@@ -465,7 +460,7 @@ class DataBase(DataPack):
         p = Path(mod_dir)
         if p.name == "Data":
             p = p.parent
-        p = p / f"Resource/Localization/{cls.LocalizationFileName}"
+        p = p / f"Resource/Localization/{Config.L10nFileName}.csv"
         if not p.exists():
             return
 
@@ -560,7 +555,7 @@ class DataBase(DataPack):
         p = Path(mod_dir)
         if p.name == "Data":
             p = p.parent
-        p = p / f"Resource/Localization/{DataBase.LocalizationFileName}"
+        p = p / f"Resource/Localization/{Config.L10nFileName}.csv"
         if not p.parent.exists():
             return
 
@@ -588,7 +583,7 @@ class DataBase(DataPack):
         if not p.exists():
             return
 
-        for key, dt in cls.read_l10n_file(p, cls.LocalizationFileName == 'En.csv'):
+        for key, dt in cls.read_l10n_file(p, Config.L10nFileName == 'En'):
             if not dt['translate']:
                 continue
 

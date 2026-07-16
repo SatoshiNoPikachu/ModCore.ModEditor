@@ -3,6 +3,8 @@
 import sys
 import re
 import traceback
+
+from Config import Config
 from DataBase import *
 
 from PyQt5.QtCore import *
@@ -272,7 +274,7 @@ class QJsonTreeItem(object):
                         if comment:
                             child.comment = comment
 
-                        if DataBase.EnableKeyAlias:
+                        if Config.KeyAlias:
                             alias = DataBase.get_alias(itemField, key)
                             if alias:
                                 child.display_key = f'{key}({alias})'
@@ -298,7 +300,7 @@ class QJsonTreeItem(object):
                     child.setType(v.__class__)
                 rootItem.appendChild(key, child)
 
-            if DataBase.AutoCompleteUpdate:
+            if Config.FieldCompletion:
                 QJsonTreeItem.auto_complete_update(rootItem, itemField, parent, value, is_modify)
 
         elif isinstance(value, list):

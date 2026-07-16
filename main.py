@@ -1,29 +1,10 @@
 # -*- coding: utf-8 -*-
-import ujson as json
 import os
-import configparser
-from pathlib import Path
+from Config import ConfigManager, Config
 
-
-def apply_scale():
-    p = Path(os.getcwd()) / 'config_mc.ini'
-    if not p.exists():
-        return
-
-    config = configparser.ConfigParser()
-    config.read(p)
-
-    if not config.has_option("Config", "FactorApplicationScale"):
-        return
-
-    scale = config.get("Config", "FactorApplicationScale")
-    if not scale:
-        return
-
-    os.environ["QT_SCALE_FACTOR"] = scale
-
-
-apply_scale()
+ConfigManager.load()
+if Config.FactorAppScale:
+    os.environ["QT_SCALE_FACTOR"] = Config.FactorAppScale
 
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
@@ -33,6 +14,7 @@ from DataBase import DataBase
 from utils import *
 from Ui_Main import *
 
+import ujson as json
 import traceback
 import sys
 import shutil
@@ -45,6 +27,7 @@ import ModifyItemGUI
 import SelectGUI
 import ExportToZip
 from glob import glob
+from pathlib import Path
 
 ModEditorVersion = "1.1.3"
 
@@ -52,18 +35,10 @@ ModEditorVersion = "1.1.3"
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         super(ModEditorGUI, self).__init__(parent)
-
-        self.autoresize = None
-        self.replace_key = None
-        self.last_open_dir = None
-        self.language = None
-        self.config = None
-
         self.setupUi(self)
 
         self.trans = QTranslator()
         logInit(os.path.join(QDir.currentPath(), "logoutput_mc.log"))
-        self.load_config()
         self.loadLanguage()
 
         self.dataInit()
@@ -75,81 +50,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.tab_item_dict = {}
 
     @log_exception(True)
-    def save_config(self):
-        with open(os.path.join(QDir.currentPath(), "config_mc.ini"), "w", encoding='utf-8') as f:
-            self.config.write(f)
-
-    @log_exception(True)
-    def load_config(self):
-        self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(QDir.currentPath(), "config_mc.ini"))
-        if self.config.has_option("Config", "Language"):
-            self.language = self.config.get("Config", "Language")
-        else:
-            self.language = ""
-            self.config.set("Config", "Language", self.language)
-            self.save_config()
-
-        if self.config.has_option("Config", "LastOpenDir"):
-            self.last_open_dir = self.config.get("Config", "LastOpenDir")
-        else:
-            self.last_open_dir = ""
-            self.config.set("Config", "LastOpenDir", self.last_open_dir)
-            self.save_config()
-
-        if self.config.has_option("Config", "AutoReplace_LocalizationKey_ParentObjectID"):
-            self.replace_key = self.config.getboolean("Config", "AutoReplace_LocalizationKey_ParentObjectID")
-        else:
-            self.replace_key = True
-            self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.replace_key))
-            self.save_config()
-
-        if self.config.has_option("Config", "AutoResize"):
-            self.autoresize = self.config.getboolean("Config", "AutoResize")
-        else:
-            self.autoresize = True
-            self.config.set("Config", "AutoResize", str(self.autoresize))
-            self.save_config()
-
-        if self.config.has_option("Config", "AutoCompleteUpdate"):
-            DataBase.AutoCompleteUpdate = self.config.getboolean("Config", "AutoCompleteUpdate")
-        else:
-            DataBase.AutoCompleteUpdate = False
-            self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
-            self.save_config()
-
-        if self.config.has_option("Config", "LocalizationFileName"):
-            DataBase.LocalizationFileName = self.config.get("Config", "LocalizationFileName") + '.csv'
-        else:
-            DataBase.LocalizationFileName = "En.csv"
-            self.config.set("Config", "LocalizationFileName", "En")
-            self.save_config()
-
-        if self.config.has_option("Config", "ModsWorkDir"):
-            DataBase.ModsWorkDir = self.config.get("Config", "ModsWorkDir")
-        else:
-            DataBase.ModsWorkDir = "Mods"
-            self.config.set("Config", "ModsWorkDir", "Mods")
-            self.save_config()
-
-        if self.config.has_option('Config', "EnableKeyAlias"):
-            DataBase.EnableKeyAlias = self.config.getboolean("Config", "EnableKeyAlias")
-        else:
-            self.config.set("Config", "EnableKeyAlias", "True")
-            self.save_config()
-
-        if self.config.has_option('Config', 'ReplacingKeyWithDefText'):
-            DataBase.ReplaceDefText = DataBase.LocalizationFileName == 'En.csv' and self.config.getboolean("Config",
-                                                                                                           "ReplacingKeyWithDefText")
-        else:
-            DataBase.ReplaceDefText = DataBase.LocalizationFileName == 'En.csv'
-            self.config.set("Config", "ReplacingKeyWithDefText", "True")
-            self.save_config()
-
-    @log_exception(True)
     def loadLanguage(self):
-        if hasattr(self, "language") and self.language is not None and self.language:
-            self.trans.load(os.path.join(QDir.currentPath(), "Localization", self.language))
+        if Config.Language:
+            self.trans.load(os.path.join(QDir.currentPath(), "Localization", Config.Language))
             _app = QApplication.instance()
             _app.installTranslator(self.trans)
             self.retranslateUi(self)
@@ -168,7 +71,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def dataInit(self):
-        DataBase.loadDataBase(QDir.currentPath(), self.language)
+        DataBase.loadDataBase(QDir.currentPath(), Config.Language)
 
     def ui_Init(self):
         self.treeView.doubleClicked.connect(self.on_treeViewDoubleClicked)
@@ -176,17 +79,17 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
 
-        if self.autoresize:
+        if Config.AutoResize:
             self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
         else:
             self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
 
-        if self.replace_key:
+        if Config.ReplaceKey:
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
         else:
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
 
-        if DataBase.AutoCompleteUpdate:
+        if Config.FieldCompletion:
             self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
         else:
             self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
@@ -261,50 +164,45 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def on_select_Chinese(self, checked: bool = False):
-        self.language = "zh_CN"
-        self.config.set("Config", "Language", self.language)
-        self.save_config()
+        Config.Language = 'zh_CN'
+        ConfigManager.save()
         self.loadLanguage()
 
     @log_exception(True)
     def on_select_English(self, checked: bool = False):
-        self.language = ""
-        self.config.set("Config", "Language", self.language)
-        self.save_config()
+        Config.Language = ''
+        ConfigManager.save()
         self.loadLanguage()
 
     @log_exception(True)
     def on_actionResizeMode(self, checked: bool = False):
-        if self.autoresize:
-            self.autoresize = False
+        if Config.AutoResize:
+            Config.AutoResize = False
             self.action_ResizeMode.setText(self.tr("Turn on auto contents resize"))
         else:
-            self.autoresize = True
+            Config.AutoResize = True
             self.action_ResizeMode.setText(self.tr("Turn off auto contents resize"))
-        self.config.set("Config", "AutoResize", str(self.autoresize))
-        self.save_config()
+        ConfigManager.save()
 
     @log_exception(True)
     def on_actionAutoReplace(self, checked: bool = False):
-        if self.replace_key:
-            self.replace_key = False
+        if Config.ReplaceKey:
+            Config.ReplaceKey = False
             self.action_AutoReplace.setText(self.tr("Turn on auto replace key guid"))
         else:
-            self.replace_key = True
+            Config.ReplaceKey = True
             self.action_AutoReplace.setText(self.tr("Turn off auto replace key guid"))
-        self.config.set("Config", "AutoReplace_LocalizationKey_ParentObjectID", str(self.replace_key))
-        self.save_config()
+        ConfigManager.save()
 
     @log_exception(True)
     def on_actionCompleteUpdate(self, checked: bool = False):
-        if DataBase.AutoCompleteUpdate:
-            DataBase.AutoCompleteUpdate = False
+        if Config.FieldCompletion:
+            Config.FieldCompletion = False
             self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
         else:
-            DataBase.AutoCompleteUpdate = True
+            Config.FieldCompletion = True
             self.action_AutoCompleteUpdates.setText(self.tr("Turn off auto completion updates"))
-        self.config.set("Config", "AutoCompleteUpdate", str(DataBase.AutoCompleteUpdate))
-        self.save_config()
+        ConfigManager.save()
 
     @log_exception(True)
     def on_actionAutoTranslationDuplicates(self, checked: bool = False):
@@ -526,7 +424,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         file_path = self.file_model.filePath(index)
 
         select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, mode=SelectGUI.SelectGUI.NewData,
-                                     replace_key=self.replace_key)
+                                     replace_key=Config.ReplaceKey)
         select.exec_()
 
         if not select.write_flag:
@@ -562,7 +460,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 with open(DataBase.AllPath[type_name][template_key], "r", encoding='utf-8') as f:
                     temp_data = json.load(f)
 
-                if select.replace_key and self.replace_key:
+                if select.replace_key and Config.ReplaceKey:
                     replace_l10n_key(temp_data, self.mod_info["Namespace"], name)
 
                 with path.open("w", encoding='utf-8') as f:
@@ -590,7 +488,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         type_name = self.file_model.fileName(top_parent)
 
         select = SelectGUI.SelectGUI(self, field_name=type_name, checked=False, mode=SelectGUI.SelectGUI.NewData,
-                                     replace_key=self.replace_key)
+                                     replace_key=Config.ReplaceKey)
         select.exec_()
 
         if not select.write_flag:
@@ -628,7 +526,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
                 temp_json["UniqueID"] = str(uuid.uuid4()).replace("-", "")
 
-                if select.replace_key and self.replace_key:
+                if select.replace_key and Config.ReplaceKey:
                     replace_l10n_key(temp_json, self.mod_info["Namespace"], name)
 
                 with path.open("w", encoding='utf-8') as f:
@@ -871,8 +769,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     guid = ""
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key,
                                                    item_name=file_name[:-5], guid=guid,
-                                                   auto_resize=self.autoresize,
-                                                   auto_replace_key_guid=self.replace_key,
+                                                   auto_resize=Config.AutoResize,
+                                                   auto_replace_key_guid=Config.ReplaceKey,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
 
@@ -898,8 +796,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 src_json.update(template_json)
 
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=data_type, key=tab_key,
-                                                   item_name=file_name[:-5], auto_resize=self.autoresize,
-                                                   auto_replace_key_guid=self.replace_key,
+                                                   item_name=file_name[:-5], auto_resize=Config.AutoResize,
+                                                   auto_replace_key_guid=Config.ReplaceKey,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(src_json, is_modify=True)
 
@@ -912,7 +810,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         guid = ""
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5],
                                        guid=guid,
-                                       auto_resize=self.autoresize, auto_replace_key_guid=self.replace_key,
+                                       auto_resize=Config.AutoResize, auto_replace_key_guid=Config.ReplaceKey,
                                        mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             elif top_name == "ScriptableObject":
@@ -926,7 +824,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 top2nd_name = self.file_model.fileName(top2nd_parent)
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5],
                                        guid=guid,
-                                       auto_resize=self.autoresize, auto_replace_key_guid=self.replace_key,
+                                       auto_resize=Config.AutoResize, auto_replace_key_guid=Config.ReplaceKey,
                                        mod_info=self.mod_info, mod_path=self.mod_path)
                 item.loadJsonData(data)
             else:
@@ -1017,20 +915,20 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if self.tab_item_dict:
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Please close all opened files first'))
             return
-        if self.last_open_dir == "":
+        if Config.LastOpenDir == "":
             mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'),
                                                         directory=QDir.currentPath())
         else:
             mod_path = QFileDialog.getExistingDirectory(self, caption=self.tr('Select a Mod folder'),
-                                                        directory=self.last_open_dir)
+                                                        directory=Config.LastOpenDir)
         if mod_path is None or mod_path == "":
             return
         if "ModMeta.json" not in os.listdir(mod_path):
             QMessageBox.warning(self, self.tr("Warning"), self.tr('Not a valid Mod folder'))
             return
-        self.last_open_dir = str(Path(mod_path).parent.absolute())
-        self.config.set("Config", "LastOpenDir", self.last_open_dir)
-        self.save_config()
+
+        Config.LastOpenDir = str(Path(mod_path).parent.absolute())
+        ConfigManager.save()
         self.load_mod(mod_path)
 
     def load_mod(self, mod_path):
