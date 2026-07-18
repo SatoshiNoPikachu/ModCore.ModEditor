@@ -58,6 +58,7 @@ class DataPack:
     AllTypeField: dict[str, dict[str, str]] = {}
     AllEnum: dict[str, dict[str, int]] = {}
     AllEnumRev: dict[str, dict[int, str]] = {}
+    AllBaseType: dict[str, list[str]] = {}
 
     AllAlias: dict[str, dict[str, str]] = {}
     AllComment: dict[str, dict[str, str]] = {}
@@ -87,6 +88,8 @@ class DataPack:
             if pack == cls.MainPack:
                 continue
             cls.load_pack(pack)
+
+        cls.make_base_type()
 
     @classmethod
     def load_pack(cls, pack: PackInfo):
@@ -248,6 +251,12 @@ class DataPack:
 
             cls.AllTypeField[type_name] = data['Fields']
 
+            base_type = data.get('Base')
+            if not base_type:
+                continue
+
+            cls.AllBaseType.setdefault(base_type, []).append(type_name)
+
         dir_enum = dir_type / 'Enum'
         if not dir_enum.exists():
             return
@@ -283,6 +292,28 @@ class DataPack:
                 alias[field] = '' if (v := doc.get('Alias')) is None else str(v)
                 comment[field] = '' if (v := doc.get('Comment')) is None else str(v)
                 notes[field] = '' if (v := doc.get('Note')) is None else str(v)
+
+    @classmethod
+    def make_base_type(cls):
+        finished = set()
+
+        def collect(type_name: str, childs):
+            if type_name in finished:
+                return
+
+            finished.add(type_name)
+
+            if type_name not in cls.AllTypeField:
+                QtCore.qWarning(f'Base type {type_name} not defined!')
+                return
+
+            for child in childs.copy():
+                if items := cls.AllBaseType.get(child):
+                    collect(child, items)
+                    childs.extend(items)
+
+        for k, v in cls.AllBaseType.items():
+            collect(k, v)
 
     @classmethod
     def get_alias(cls, type_name: str, field: str):
