@@ -114,15 +114,6 @@ class SelectGUI(QDialog, Ui_Select):
 
                     check_box.stateChanged.connect(self.on_dom_check_box_state_changed)
                     self.checkBoxList[key] = check_box
-
-                    # data = target[key]
-                    # self.comboBox.addItems(data)
-                    # if isinstance(data, dict):
-                    #     keys = [item for v in data.values() if isinstance(v, list) for item in v]
-                    # else:
-                    #     keys = data if isinstance(data, list) else []
-                    # ref_list.extend(keys)
-
                     self.horizontalLayout_CheckBox2.addWidget(check_box, i // 10, i % 10)
                 self.m_completer = QCompleter(ref_list, self)
 
@@ -137,45 +128,17 @@ class SelectGUI(QDialog, Ui_Select):
                             check_box.setChecked(True)
                         self.checkBoxList[key] = check_box
                         check_box.stateChanged.connect(self.on_so_check_box_state_changed)
-                        # if key == "CardData":
-                        #     for sub_key in DataBase.AllRef[key].keys():
-                        #         self.comboBox.addItems(DataBase.AllRef[key][sub_key])
-                        #         ref_list.extend(DataBase.AllRef[key][sub_key])
-                        # else:
-                        #     self.comboBox.addItems(DataBase.AllRef[key])
-                        #     ref_list.extend(DataBase.AllRef[key])
                         self.horizontalLayout_CheckBox.addWidget(check_box)
-                # self.comboBox.addItems(DataBase.AllScriptableObject.keys())
                 self.m_completer = QCompleter(ref_list, self)
 
             elif self.field_name in DataBase.AllEnum:
                 self.comboBox.addItems(DataBase.AllEnum[self.field_name].keys())
                 self.m_completer = QCompleter(DataBase.AllEnum[self.field_name].keys(), self)
+
             elif self.field_name in DataBase.AllRef:
                 self.comboBox.addItems(DataBase.AllRef[self.field_name])
                 self.m_completer = QCompleter(DataBase.AllRef[self.field_name], self)
 
-            elif self.field_name == "BlueprintCardDataCardTabGroup":
-                self.comboBox.addItems(DataBase.AllBlueprintTab)
-                self.m_completer = QCompleter(DataBase.AllBlueprintTab, self)
-            elif self.field_name == "BlueprintCardDataCardTabSubGroup":
-                self.comboBox.addItems(DataBase.AllBlueprintSubTab)
-                self.m_completer = QCompleter(DataBase.AllBlueprintSubTab, self)
-            elif self.field_name == "ItemCardDataCardTabGpGroup":
-                self.comboBox.addItems(DataBase.AllItemTabGpGroup)
-                self.m_completer = QCompleter(DataBase.AllItemTabGpGroup, self)
-            elif self.field_name == "CardDataCardFilterGroup":
-                self.comboBox.addItems(DataBase.AllCardFilterGroup)
-                self.m_completer = QCompleter(DataBase.AllCardFilterGroup, self)
-            elif self.field_name == "CharacterPerkPerkGroup":
-                self.comboBox.addItems(DataBase.AllRef["PerkGroup"])
-                self.m_completer = QCompleter(DataBase.AllRef["PerkGroup"], self)
-            elif self.field_name == "VisibleGameStatStatListTab":
-                self.comboBox.addItems(DataBase.AllRef["StatListTab"])
-                self.m_completer = QCompleter(DataBase.AllRef["StatListTab"], self)
-            elif self.field_name == "PlayerCharacterJournalName":
-                self.comboBox.addItems(DataBase.AllRef["ContentDisplayer"])
-                self.m_completer = QCompleter(DataBase.AllRef["ContentDisplayer"], self)
             else:
                 self.m_completer = QCompleter([], self)
 
@@ -185,8 +148,9 @@ class SelectGUI(QDialog, Ui_Select):
             self.lineEdit.setCompleter(self.m_completer)
             self.comboBox.currentTextChanged.connect(self.on_Choosed)
             self.buttonBox.clicked.connect(self.on_accepted)
+
         except Exception as ex:
-            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+            QtCore.qWarning(traceback.format_exc())
 
     @log_exception(True)
     def on_CardDataCheckBoxStateChanged(self, a0: int):
