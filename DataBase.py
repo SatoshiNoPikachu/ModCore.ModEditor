@@ -88,7 +88,6 @@ class DataBase(DataPack):
     @staticmethod
     def loadDataBase(data_dir: str, lan: str):
         DataBase.DataDir = data_dir
-        DataBase.Language = lan
 
         if not os.path.exists(DataBase.DataDir + "/Mods"):
             os.mkdir(DataBase.DataDir + "/Mods")

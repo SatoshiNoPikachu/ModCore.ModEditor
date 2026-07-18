@@ -2,6 +2,7 @@ import yaml
 import ujson as json
 from pathlib import Path
 
+from Config import Config
 from utils import remove_postfix
 from MyLogger import *
 
@@ -58,7 +59,6 @@ class DataPack:
     AllEnum: dict[str, dict[str, int]] = {}
     AllEnumRev: dict[str, dict[int, str]] = {}
 
-    Language = ""
     AllAlias: dict[str, dict[str, str]] = {}
     AllComment: dict[str, dict[str, str]] = {}
     AllNotes: dict[str, dict[str, str]] = {}
@@ -102,7 +102,7 @@ class DataPack:
 
         cls.load_type_struct(path)
 
-        cls.load_doc(path, cls.Language)
+        cls.load_doc(path)
 
     @classmethod
     def load_name(cls, path: Path):
@@ -261,8 +261,8 @@ class DataPack:
                 cls.AllEnumRev[p.stem] = {v: k for k, v in data.items()}
 
     @classmethod
-    def load_doc(cls, path: Path, lan: str):
-        dir_doc = path / ('Doc' if lan == 'zh_CN' else 'Doc-En')
+    def load_doc(cls, path: Path):
+        dir_doc = path / ('Doc' if Config.Language == 'zh_CN' else 'Doc-En')
         if not dir_doc.exists():
             return
 
