@@ -52,7 +52,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def loadLanguage(self):
         if Config.Language:
-            self.trans.load(os.path.join(QDir.currentPath(), "Localization", Config.Language))
+            self.trans.load(os.path.join(QDir.currentPath(), "L10n", Config.Language))
             _app = QApplication.instance()
             _app.installTranslator(self.trans)
             self.retranslateUi(self)
