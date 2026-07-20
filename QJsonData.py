@@ -473,12 +473,13 @@ class QJsonProxyModel(QSortFilterProxyModel):
 
 
 class QJsonModel(QAbstractItemModel):
-    def __init__(self, root_field, parent=None, is_modify=False):
+    def __init__(self, root_field, parent=None, is_modify=False, readonly: bool = False):
         super().__init__(parent)
         self.mRootItem = QJsonTreeItem()
         self.mHeaders = ["key", "value", "field", "type", "valid", "note", "custom note", "status"]
         self.root_field = root_field
         self.is_modify = is_modify
+        self.readonly = readonly
 
     def loadJson(self, json_data: dict):
         # error = QJsonParseError()
@@ -884,6 +885,9 @@ class QJsonModel(QAbstractItemModel):
         return True
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag | Qt.ItemFlags:
+        if self.readonly:
+            return Qt.ItemFlag.ItemIsEnabled
+
         if self.is_modify and not (item := index.internalPointer()).IsOverride:
             if index.column() == 0:
                 return Qt.ItemFlag.ItemIsEnabled

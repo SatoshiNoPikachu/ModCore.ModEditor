@@ -16,10 +16,8 @@ from MyLogger import *
 
 class ModifyItemGUI(ItemGUI):
     def __init__(self, parent=None, field: str = "", key: str = "", item_name: str = "", guid: str = "",
-                 auto_resize: bool = True, auto_replace_key_guid: bool = False, mod_info: dict = None,
-                 mod_path: str = ""):
-        super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid,
-                                            auto_resize, auto_replace_key_guid, mod_info, mod_path)
+                 replace_key: bool = False, mod_info: dict = None, mod_path: str = ""):
+        super(ModifyItemGUI, self).__init__(parent, field, key, item_name, guid, replace_key, mod_info, mod_path)
 
     # override
     def addSpecialButton(self):
@@ -82,7 +80,7 @@ class ModifyItemGUI(ItemGUI):
             return
 
     @log_exception(True)
-    def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
+    def on_tree_view_custom_context_menu_requested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -95,11 +93,11 @@ class ModifyItemGUI(ItemGUI):
             if item.parent() is not None:
                 if item.type() == "list" or item.type() == "dict":
                     pExpandAct = QAction(self.tr("Expand All"), menu)
-                    pExpandAct.triggered.connect(self.on_actExpandAll)
+                    pExpandAct.triggered.connect(self.on_act_expand_all)
                     menu.addAction(pExpandAct)
 
                     pCollapseAct = QAction(self.tr("Collapse All"), menu)
-                    pCollapseAct.triggered.connect(self.on_actCollapseAll)
+                    pCollapseAct.triggered.connect(self.on_act_collapse_all)
                     # menu.addAction(pCollapseAct)
 
                 if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
@@ -108,15 +106,15 @@ class ModifyItemGUI(ItemGUI):
                             pRefAct = QAction(self.tr("Append Reference"), menu)
 
                             pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                            pSaveListAct.triggered.connect(self.on_saveRefListItem)
+                            pSaveListAct.triggered.connect(self.on_save_ref_list_item)
                             menu.addAction(pSaveListAct)
 
                             pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                            pNewListAct.triggered.connect(self.on_loadRefListItem)
+                            pNewListAct.triggered.connect(self.on_load_ref_list_item)
                             menu.addAction(pNewListAct)
                         else:
                             pRefAct = QAction(self.tr("Reference"), menu)
-                        pRefAct.triggered.connect(self.on_addRefItem)
+                        pRefAct.triggered.connect(self.on_add_ref_item)
                         menu.addAction(pRefAct)
                     else:
                         if item.type() == "list":
@@ -136,35 +134,35 @@ class ModifyItemGUI(ItemGUI):
                 elif item.key().endswith("WarpData"):
                     if item.type() == "list":
                         pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                        pDelListAct.triggered.connect(self.on_delListItem)
+                        pDelListAct.triggered.connect(self.on_del_list_item)
                         menu.addAction(pDelListAct)
                 else:
                     if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
                         if item.parent().type() == "list":
                             pDeleteAct = QAction(self.tr("Delete"), menu)
-                            pDeleteAct.triggered.connect(self.on_delItemFromList)
+                            pDeleteAct.triggered.connect(self.on_del_item_from_list)
                             menu.addAction(pDeleteAct)
 
                         if item.type() == "list":
                             pNewAct = QAction(self.tr("New Empty Entry"), menu)
-                            pNewAct.triggered.connect(self.on_newItemToList)
+                            pNewAct.triggered.connect(self.on_new_item_to_list)
                             menu.addAction(pNewAct)
 
                             pNewAct = QAction(self.tr("Load Collection"), menu)
-                            pNewAct.triggered.connect(self.on_loadItem)
+                            pNewAct.triggered.connect(self.on_load_item)
                             menu.addAction(pNewAct)
 
                             pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                            pNewListAct.triggered.connect(self.on_loadListItem)
+                            pNewListAct.triggered.connect(self.on_load_list_item)
                             menu.addAction(pNewListAct)
 
                             pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                            pDelListAct.triggered.connect(self.on_delListItem)
+                            pDelListAct.triggered.connect(self.on_del_list_item)
                             menu.addAction(pDelListAct)
 
                         if item.type() == "dict":
                             pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
-                            pCopyCollAct.triggered.connect(self.on_copyCollItem)
+                            pCopyCollAct.triggered.connect(self.on_copy_coll_item)
                             menu.addAction(pCopyCollAct)
                     else:
                         if item.type() == "list":
@@ -180,12 +178,12 @@ class ModifyItemGUI(ItemGUI):
 
                     if item.type() == "list":
                         pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                        pSaveListAct.triggered.connect(self.on_saveListItem)
+                        pSaveListAct.triggered.connect(self.on_save_list_item)
                         menu.addAction(pSaveListAct)
 
                     if item.type() == "dict":
                         pSaveAct = QAction(self.tr("Save Collection"), menu)
-                        pSaveAct.triggered.connect(self.on_saveItem)
+                        pSaveAct.triggered.connect(self.on_save_item)
                         menu.addAction(pSaveAct)
             if len(menu.actions()):
                 menu.popup(self.sender().mapToGlobal(pos))
@@ -211,7 +209,7 @@ class ModifyItemGUI(ItemGUI):
 
         if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
             data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
-            if self.auto_replace_key_guid:
+            if self.replace_key:
                 replace_l10n_key(data, self.mod_info["Namespace"], self.item_name, self.guid)
             self.addWarpItem(index, "Collection", data)
 
@@ -237,14 +235,12 @@ class ModifyItemGUI(ItemGUI):
         if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
-                if self.auto_replace_key_guid:
-                    replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
-                                     self.guid,
-                                     item.key(), i)
+                if self.replace_key:
+                    replace_l10n_key(data, self.mod_info["Namespace"], self.item_name, self.guid, item.key(), i)
                 self.addWarpItem(index, "Collection", data)
 
     @log_exception(True)
-    def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
+    def on_new_save_button_box_accepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
             return

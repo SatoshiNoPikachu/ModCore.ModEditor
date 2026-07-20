@@ -15,8 +15,7 @@ from DataBase import *
 
 class ItemGUI(QWidget, Ui_Item):
     def __init__(self, parent=None, field: str = "", key: str = "", item_name: str = "", guid: str = "",
-                 auto_resize: bool = True, auto_replace_key_guid: bool = False, mod_info: dict = None,
-                 mod_path: str = ""):
+                 replace_key: bool = False, mod_info: dict = None, mod_path: str = "", readonly: bool = False):
         super(ItemGUI, self).__init__(parent)
         self.setupUi(self)
         self.field = field
@@ -25,24 +24,28 @@ class ItemGUI(QWidget, Ui_Item):
         self.mod_info = mod_info
         self.mod_path = mod_path
         self.tab_key = key
-        self.auto_replace_key_guid = auto_replace_key_guid
+        self.replace_key = replace_key
+        self.readonly = readonly
         self.treeView.setItemDelegateForColumn(1, ItemDelegate(self.field, self.treeView))
         self.treeView.setItemDelegateForColumn(4, EnableDelegate(self.treeView))
         self.treeView.setSortingEnabled(True)
         self.treeView.header().setSortIndicator(0, Qt.SortOrder.AscendingOrder)
         self.treeView.header().setSortIndicator(4, Qt.SortOrder.DescendingOrder)
         self.treeView.setDragEnabled(True)
-        if auto_resize:
+        if Config.AutoResize:
             self.treeView.header().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         self.treeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.treeView.customContextMenuRequested.connect(self.on_treeViewCustomContextMenuRequested)
+        if readonly:
+            self.treeView.customContextMenuRequested.connect(self.on_tree_view_readonly_custom_context_menu_requested)
+        else:
+            self.treeView.customContextMenuRequested.connect(self.on_tree_view_custom_context_menu_requested)
 
         self.showInvalidButton.setText(self.tr("Show invalid entries"))
         self.show_invalid = False
-        self.showInvalidButton.clicked.connect(self.on_showInvalidButtonClicked)
+        self.showInvalidButton.clicked.connect(self.on_show_invalid_button_clicked)
 
-        self.lineEdit.textChanged.connect(self.on_lineEditTextChanged)
+        self.lineEdit.textChanged.connect(self.on_line_edit_text_changed)
 
         self.addSpecialButton()
 
@@ -52,18 +55,8 @@ class ItemGUI(QWidget, Ui_Item):
     def setTabKey(self, key: str):
         self.tab_key = key
 
-    @log_exception(True)
-    def on_tabButtonPlayerCharacterJournalName(self, checked: bool = False):
-        select = SelectGUI(self.treeView, field_name="PlayerCharacterJournalName", mode=SelectGUI.Special)
-        select.exec_()
-
-        if select.write_flag and select.lineEdit.text():
-            self.model.addItem(QModelIndex(), "PlayerCharacterJournalName", str, select.lineEdit.text(), "SpecialWarp",
-                               True)
-            return
-
-    def loadJsonData(self, json_data: dict, is_modify: bool = False):
-        self.model = QJsonModel(self.field, is_modify=is_modify)
+    def load_json_data(self, json_data: dict, is_modify: bool = False):
+        self.model = QJsonModel(self.field, is_modify=is_modify, readonly=self.readonly)
         self.model.loadJson(json_data)
         self.proxy_model = QJsonProxyModel(self.treeView)
         self.proxy_model.setSourceModel(self.model)
@@ -72,7 +65,7 @@ class ItemGUI(QWidget, Ui_Item):
         #     self.treeView.resizeColumnToContents(i)
 
     @log_exception(True)
-    def on_showInvalidButtonClicked(self, checked: bool = False) -> None:
+    def on_show_invalid_button_clicked(self, checked: bool = False) -> None:
         if not self.show_invalid:
             self.showInvalidButton.setText(self.tr("Hide invalid entries"))
             self.proxy_model.setVaildFilter(False)
@@ -83,133 +76,180 @@ class ItemGUI(QWidget, Ui_Item):
             self.show_invalid = False
 
     @log_exception(True)
-    def on_lineEditTextChanged(self, key: str) -> None:
+    def on_line_edit_text_changed(self, key: str) -> None:
         self.proxy_model.setKeyFilter(key)
 
     @log_exception(True)
-    def on_treeViewCustomContextMenuRequested(self, pos: QPoint) -> None:
+    def on_tree_view_readonly_custom_context_menu_requested(self, pos: QPoint):
         index = self.treeView.currentIndex()
-        if index.isValid():
-            model = index.model()
-            if hasattr(model, 'mapToSource'):
-                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        if not index.isValid():
+            return
+
+        model = index.model()
+        if hasattr(model, 'mapToSource'):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        if item.parent is None:
+            return
+
+        menu = QMenu(self.treeView)
+
+        if item.type() == "list" or item.type() == "dict":
+            pExpandAct = QAction(self.tr("Expand All"), menu)
+            pExpandAct.triggered.connect(self.on_act_expand_all)
+            menu.addAction(pExpandAct)
+
+        if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
+            if item.type() == "list":
+                pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                pSaveListAct.triggered.connect(self.on_save_ref_list_item)
+                menu.addAction(pSaveListAct)
+        elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
+                item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
+            pass
+        else:
+            if item.type() == "dict":
+                pSaveAct = QAction(self.tr("Save Collection"), menu)
+                pSaveAct.triggered.connect(self.on_save_item)
+                menu.addAction(pSaveAct)
+            elif item.type() == "list":
+                pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                pSaveListAct.triggered.connect(self.on_save_list_item)
+                menu.addAction(pSaveListAct)
+
+        if len(menu.actions()):
+            menu.popup(self.sender().mapToGlobal(pos))
+
+    @log_exception(True)
+    def on_tree_view_custom_context_menu_requested(self, pos: QPoint) -> None:
+        index = self.treeView.currentIndex()
+        if not index.isValid():
+            return
+
+        model = index.model()
+        if hasattr(model, 'mapToSource'):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        if item.parent is None:
+            return
+
+        menu = QMenu(self.treeView)
+        if item.field() == "SpecialWarp" and item.depth() == 1:
+            pDeleteAct = QAction(self.tr("Delete"), menu)
+            pDeleteAct.triggered.connect(self.on_del_item)
+            menu.addAction(pDeleteAct)
+
+        if item.parent().type() == "list" and item.depth() > 1:
+            pDeleteAct = QAction(self.tr("Delete"), menu)
+            pDeleteAct.triggered.connect(self.on_del_item_from_list)
+            menu.addAction(pDeleteAct)
+
+        if item.type() == "list" or item.type() == "dict":
+            pExpandAct = QAction(self.tr("Expand All"), menu)
+            pExpandAct.triggered.connect(self.on_act_expand_all)
+            menu.addAction(pExpandAct)
+
+            # pCollapseAct = QAction(self.tr("Collapse All"), menu)
+            # pCollapseAct.triggered.connect(self.on_act_collapse_all)
+            # menu.addAction(pCollapseAct)
+
+        if item.type() == "list" and item.field() == "WarpRef":
+            pDelListAct = QAction(self.tr("Delete Whole List"), menu)
+            pDelListAct.triggered.connect(self.on_del_list_item)
+            menu.addAction(pDelListAct)
+
+        if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
+            if item.type() == "list":
+                pRefAct = QAction(self.tr("Append Reference"), menu)
+
+                pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                pSaveListAct.triggered.connect(self.on_save_ref_list_item)
+                menu.addAction(pSaveListAct)
+
+                pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                pNewListAct.triggered.connect(self.on_load_ref_list_item)
+                menu.addAction(pNewListAct)
+
+                if item.key() == "InventorySlots":
+                    pEmptyRefAct = QAction(self.tr("Append Inventory Slot"), menu)
+                    pEmptyRefAct.triggered.connect(self.on_add_empty_ref_item)
+                    menu.addAction(pEmptyRefAct)
             else:
-                srcModel, item, srcIndex = model, index.internalPointer(), index
+                pRefAct = QAction(self.tr("Reference"), menu)
+            pRefAct.triggered.connect(self.on_add_ref_item)
+            menu.addAction(pRefAct)
+        elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
+                item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
+            pass
+        else:
+            if item.depth() == 1:
+                pCopyAct = QAction(self.tr("Copy Template and Overwrite"), menu)
+                pCopyAct.triggered.connect(self.on_copy_item)
+                menu.addAction(pCopyAct)
 
-            menu = QMenu(self.treeView)
-            if item.parent() is not None:
-                if item.field() == "SpecialWarp" and item.depth() == 1:
-                    pDeleteAct = QAction(self.tr("Delete"), menu)
-                    pDeleteAct.triggered.connect(self.on_delItem)
-                    menu.addAction(pDeleteAct)
+                if item.type() == "list":
+                    pAddAct = QAction(self.tr("Append Template Entries"), menu)
+                    pAddAct.triggered.connect(self.on_add_item_to_list)
+                    menu.addAction(pAddAct)
 
-                if item.parent().type() == "list" and item.depth() > 1:
-                    pDeleteAct = QAction(self.tr("Delete"), menu)
-                    pDeleteAct.triggered.connect(self.on_delItemFromList)
-                    menu.addAction(pDeleteAct)
+            if item.type() == "dict":
+                pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
+                pCopyCollAct.triggered.connect(self.on_copy_coll_item)
+                menu.addAction(pCopyCollAct)
 
-                if item.type() == "list" or item.type() == "dict":
-                    pExpandAct = QAction(self.tr("Expand All"), menu)
-                    pExpandAct.triggered.connect(self.on_actExpandAll)
-                    menu.addAction(pExpandAct)
+                pSaveAct = QAction(self.tr("Save Collection"), menu)
+                pSaveAct.triggered.connect(self.on_save_item)
+                menu.addAction(pSaveAct)
 
-                    pCollapseAct = QAction(self.tr("Collapse All"), menu)
-                    pCollapseAct.triggered.connect(self.on_actCollapseAll)
-                    # menu.addAction(pCollapseAct)
+            if item.type() == "list":
+                pNewAct = QAction(self.tr("New Empty Entry"), menu)
+                pNewAct.triggered.connect(self.on_new_item_to_list)
+                menu.addAction(pNewAct)
 
-                if item.type() == "list" and item.field() == "WarpRef":
-                    pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                    pDelListAct.triggered.connect(self.on_delListItem)
-                    menu.addAction(pDelListAct)
+                pNewAct = QAction(self.tr("Load Collection"), menu)
+                pNewAct.triggered.connect(self.on_load_item)
+                menu.addAction(pNewAct)
 
-                if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
-                    if item.type() == "list":
-                        pRefAct = QAction(self.tr("Append Reference"), menu)
+                pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                pSaveListAct.triggered.connect(self.on_save_list_item)
+                menu.addAction(pSaveListAct)
 
-                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                        pSaveListAct.triggered.connect(self.on_saveRefListItem)
-                        menu.addAction(pSaveListAct)
+                pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                pNewListAct.triggered.connect(self.on_load_list_item)
+                menu.addAction(pNewListAct)
 
-                        pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                        pNewListAct.triggered.connect(self.on_loadRefListItem)
-                        menu.addAction(pNewListAct)
+                pDelListAct = QAction(self.tr("Delete Whole List"), menu)
+                pDelListAct.triggered.connect(self.on_del_list_item)
+                menu.addAction(pDelListAct)
 
-                        if item.key() == "InventorySlots":
-                            pEmptyRefAct = QAction(self.tr("Append Inventory Slot"), menu)
-                            pEmptyRefAct.triggered.connect(self.on_addEmptyRefItem)
-                            menu.addAction(pEmptyRefAct)
-                    else:
-                        pRefAct = QAction(self.tr("Reference"), menu)
-                    pRefAct.triggered.connect(self.on_addRefItem)
-                    menu.addAction(pRefAct)
-                elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
-                        item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
-                    pass
-                else:
-                    if item.depth() == 1:
-                        pCopyAct = QAction(self.tr("Copy Template and Overwrite"), menu)
-                        pCopyAct.triggered.connect(self.on_copyItem)
-                        menu.addAction(pCopyAct)
+        if len(menu.actions()):
+            menu.popup(self.sender().mapToGlobal(pos))
 
-                        if item.type() == "list":
-                            pAddAct = QAction(self.tr("Append Template Entries"), menu)
-                            pAddAct.triggered.connect(self.on_addItemToList)
-                            menu.addAction(pAddAct)
-
-                    if item.type() == "dict":
-                        pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
-                        pCopyCollAct.triggered.connect(self.on_copyCollItem)
-                        menu.addAction(pCopyCollAct)
-
-                        pSaveAct = QAction(self.tr("Save Collection"), menu)
-                        pSaveAct.triggered.connect(self.on_saveItem)
-                        menu.addAction(pSaveAct)
-
-                    if item.type() == "list":
-                        pNewAct = QAction(self.tr("New Empty Entry"), menu)
-                        pNewAct.triggered.connect(self.on_newItemToList)
-                        menu.addAction(pNewAct)
-
-                        pNewAct = QAction(self.tr("Load Collection"), menu)
-                        pNewAct.triggered.connect(self.on_loadItem)
-                        menu.addAction(pNewAct)
-
-                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                        pSaveListAct.triggered.connect(self.on_saveListItem)
-                        menu.addAction(pSaveListAct)
-
-                        pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                        pNewListAct.triggered.connect(self.on_loadListItem)
-                        menu.addAction(pNewListAct)
-
-                        pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                        pDelListAct.triggered.connect(self.on_delListItem)
-                        menu.addAction(pDelListAct)
-
-            if len(menu.actions()):
-                menu.popup(self.sender().mapToGlobal(pos))
-
-    def CollapseChildren(self, index: QModelIndex) -> None:
+    def collapse_children(self, index: QModelIndex) -> None:
         if index.isValid():
             for i in range(index.model().rowCount(index)):
                 child_index = index.child(i, 0)
-                self.CollapseChildren(child_index)
+                self.collapse_children(child_index)
             self.treeView.collapse(index)
 
     @log_exception(True)
-    def on_actCollapseAll(self, checked: bool = False) -> None:
+    def on_act_collapse_all(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
-            self.CollapseChildren(index)
+            self.collapse_children(index)
 
     @log_exception(True)
-    def on_actExpandAll(self, checked: bool = False) -> None:
+    def on_act_expand_all(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             self.treeView.expandRecursively(index)
 
     @log_exception(True)
-    def on_delItem(self, checked: bool = False) -> None:
+    def on_del_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -220,12 +260,12 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.deleteItem(srcIndex)
 
     @log_exception(True)
-    def on_delItemFromList(self, checked: bool = False) -> None:
+    def on_del_item_from_list(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         self.model.removeListItem(index)
 
     @log_exception(True)
-    def on_delListItem(self, checked: bool = False) -> None:
+    def on_del_list_item(self, checked: bool = False) -> None:
         reply = QMessageBox.question(self, self.tr("Warning"), self.tr("Sure you want to delete the whole list?"),
                                      QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.No)
         if reply == QMessageBox.Yes:
@@ -233,7 +273,7 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.removeAllListChild(index)
 
     @log_exception(True)
-    def on_addItemToList(self, checked: bool = False) -> None:
+    def on_add_item_to_list(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -256,7 +296,7 @@ class ItemGUI(QWidget, Ui_Item):
                                 child_key = 0
                                 while str(child_key) in item.mChilds:
                                     child_key += 1
-                                if self.auto_replace_key_guid:
+                                if self.replace_key:
                                     replace_l10n_key(sub_data, self.mod_info["Namespace"],
                                                      self.item_name, self.guid, item.key(),
                                                      child_key)
@@ -264,7 +304,7 @@ class ItemGUI(QWidget, Ui_Item):
                         return
 
     @log_exception(True)
-    def on_newItemToList(self, checked: bool = False) -> None:
+    def on_new_item_to_list(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -284,7 +324,7 @@ class ItemGUI(QWidget, Ui_Item):
             return
 
     @log_exception(True)
-    def on_loadItem(self, checked: bool = False) -> None:
+    def on_load_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -307,14 +347,14 @@ class ItemGUI(QWidget, Ui_Item):
             while str(child_key) in item.mChilds:
                 child_key += 1
             data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
-            if self.auto_replace_key_guid:
+            if self.replace_key:
                 replace_l10n_key(data, self.mod_info["Namespace"], self.item_name, self.guid,
                                  item.key(), child_key)
             self.model.addJsonItem(srcIndex, data, item.field(), str(child_key))
             return
 
     @log_exception(True)
-    def on_loadListItem(self, checked: bool = False) -> None:
+    def on_load_list_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -338,7 +378,7 @@ class ItemGUI(QWidget, Ui_Item):
                 while str(child_key) in item.mChilds:
                     child_key += 1
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
-                if self.auto_replace_key_guid:
+                if self.replace_key:
                     replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
                                      self.guid,
                                      item.key(), child_key)
@@ -346,7 +386,7 @@ class ItemGUI(QWidget, Ui_Item):
             return
 
     @log_exception(True)
-    def on_loadRefListItem(self, checked: bool = False) -> None:
+    def on_load_ref_list_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -372,11 +412,11 @@ class ItemGUI(QWidget, Ui_Item):
         if self.loadCollection.write_flag and name in DataBase.AllListCollection[item.field()]:
             for i in range(len(DataBase.AllListCollection[item.field()][name])):
                 data = copy.deepcopy(DataBase.AllListCollection[item.field()][name][i])
-                self.addRefItem(data, item, index)
+                self.add_ref_item(data, item, index)
             return
 
     @log_exception(True)
-    def on_saveItem(self, checked: bool = False) -> None:
+    def on_save_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -386,12 +426,12 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
         self.newSave = NewItemGUI(self)
-        self.newSave.buttonBox.accepted.connect(lambda: self.on_newSaveButtonBoxAccepted(item))
+        self.newSave.buttonBox.accepted.connect(lambda: self.on_new_save_button_box_accepted(item))
         self.newSave.setWindowTitle(self.tr("Add ") + item.field() + self.tr(" type collection"))
         self.newSave.exec_()
 
     @log_exception(True)
-    def on_saveListItem(self, checked: bool = False) -> None:
+    def on_save_list_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -401,12 +441,12 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
         self.newSaveList = NewItemGUI(self)
-        self.newSaveList.buttonBox.accepted.connect(lambda: self.on_newSaveListButtonBoxAccepted(item))
+        self.newSaveList.buttonBox.accepted.connect(lambda: self.on_new_save_list_button_box_accepted(item))
         self.newSaveList.setWindowTitle(self.tr("Add ") + item.field() + self.tr("[] type collection"))
         self.newSaveList.exec_()
 
     @log_exception(True)
-    def on_saveRefListItem(self, checked: bool = False) -> None:
+    def on_save_ref_list_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -416,12 +456,12 @@ class ItemGUI(QWidget, Ui_Item):
                 srcModel, item, srcIndex = model, index.internalPointer(), index
 
         self.newSaveList = NewItemGUI(self)
-        self.newSaveList.buttonBox.accepted.connect(lambda: self.on_newSaveRefListButtonBoxAccepted(item))
+        self.newSaveList.buttonBox.accepted.connect(lambda: self.on_new_save_ref_list_button_box_accepted(item))
         self.newSaveList.setWindowTitle(self.tr("Add ") + item.field() + self.tr("[] type collection"))
         self.newSaveList.exec_()
 
     @log_exception(True)
-    def on_newSaveButtonBoxAccepted(self, item: QJsonTreeItem):
+    def on_new_save_button_box_accepted(self, item: QJsonTreeItem):
         name = self.newSave.lineEdit.text()
         if not name:
             return
@@ -435,7 +475,7 @@ class ItemGUI(QWidget, Ui_Item):
         DataBase.AllCollection[item.field()][name] = self.model.to_json(item)
 
     @log_exception(True)
-    def on_newSaveListButtonBoxAccepted(self, item: QJsonTreeItem):
+    def on_new_save_list_button_box_accepted(self, item: QJsonTreeItem):
         name = self.newSaveList.lineEdit.text()
         if not name:
             return
@@ -449,7 +489,7 @@ class ItemGUI(QWidget, Ui_Item):
         DataBase.AllListCollection[item.field()][name] = self.model.to_json(item)
 
     @log_exception(True)
-    def on_newSaveRefListButtonBoxAccepted(self, item: QJsonTreeItem):
+    def on_new_save_ref_list_button_box_accepted(self, item: QJsonTreeItem):
         name = self.newSaveList.lineEdit.text()
         if not name:
             return
@@ -468,7 +508,7 @@ class ItemGUI(QWidget, Ui_Item):
         DataBase.AllListCollection[item.field()][name] = self.model.to_json(warpDataItem)
 
     @log_exception(True)
-    def on_copyItem(self, checked: bool = False) -> None:
+    def on_copy_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -486,7 +526,7 @@ class ItemGUI(QWidget, Ui_Item):
                     if template_key in DataBase.AllPath[self.field]:
                         with open(DataBase.AllPath[self.field][template_key], 'r', encoding='utf-8') as f:
                             data = json.load(f)[item.key()]
-                        if self.auto_replace_key_guid:
+                        if self.replace_key:
                             replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
                                              self.guid)
                         self.model.deleteItem(srcIndex)
@@ -494,7 +534,7 @@ class ItemGUI(QWidget, Ui_Item):
                         return
 
     @log_exception(True)
-    def on_copyCollItem(self, checked: bool = False) -> None:
+    def on_copy_coll_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -515,13 +555,13 @@ class ItemGUI(QWidget, Ui_Item):
             if self.loadCollection.write_flag and name in DataBase.AllCollection[item.field()]:
                 self.model.deleteItem(srcIndex)
                 data = copy.deepcopy(DataBase.AllCollection[item.field()][name])
-                if self.auto_replace_key_guid:
+                if self.replace_key:
                     replace_l10n_key(data, self.mod_info["Namespace"], self.item_name,
                                      self.guid)
                 self.model.addJsonItem(srcIndex.parent(), data, item.field(), item.key())
                 return
 
-    def addRefItem(self, data: str, item, index: QModelIndex):
+    def add_ref_item(self, data: str, item, index: QModelIndex):
         field = item.field()
 
         if data == "":
@@ -561,7 +601,7 @@ class ItemGUI(QWidget, Ui_Item):
             self.model.addRefWarp(index, remove_postfix(data))
 
     @log_exception(True)
-    def on_addRefItem(self, checked: bool = False) -> None:
+    def on_add_ref_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()
@@ -574,10 +614,10 @@ class ItemGUI(QWidget, Ui_Item):
             select.exec_()
 
             if select.write_flag:
-                self.addRefItem(select.lineEdit.text(), item, index)
+                self.add_ref_item(select.lineEdit.text(), item, index)
 
     @log_exception(True)
-    def on_addEmptyRefItem(self, checked: bool = False) -> None:
+    def on_add_empty_ref_item(self, checked: bool = False) -> None:
         index = self.treeView.currentIndex()
         if index.isValid():
             model = index.model()

@@ -17,6 +17,7 @@ class SelectGUI(QDialog, Ui_Select):
     Append = 3
     Special = 4
     NewModify = 5
+    Browser = 6
 
     def __init__(self, parent=None, field_name: str = "", checked: bool = False, mode: int = 0,
                  replace_key: bool = False):
@@ -61,6 +62,9 @@ class SelectGUI(QDialog, Ui_Select):
 
         if mode == SelectGUI.Special:
             self.setWindowTitle(self.tr("Add Special Entry"))
+
+        if mode == SelectGUI.Browser:
+            self.setWindowTitle(self.tr('Browse ') + field_name)
 
         try:
             if field_name == "CardData":

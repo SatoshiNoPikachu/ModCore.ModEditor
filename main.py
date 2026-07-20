@@ -369,6 +369,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         pAddAct = QAction(self.tr("New File"), pmenu)
                         pAddAct.triggered.connect(self.on_new_uo)
                         pmenu.addAction(pAddAct)
+
+                        browse_act = QAction(self.tr("Browse Object"), pmenu)
+                        browse_act.triggered.connect(self.on_browse)
+                        pmenu.addAction(browse_act)
+
             elif depth == 2:
                 top_parent = self.getDepthParent(index, depth=1)
                 if top_parent is None:
@@ -379,6 +384,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                         pAddAct = QAction(self.tr("New File"), pmenu)
                         pAddAct.triggered.connect(self.on_new_so)
                         pmenu.addAction(pAddAct)
+
+                        browse_act = QAction(self.tr("Browse Object"), pmenu)
+                        browse_act.triggered.connect(self.on_browse)
+                        pmenu.addAction(browse_act)
+
                 elif top_name == "GameSourceModify":
                     pass
                 else:
@@ -405,6 +415,45 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     pmenu.addAction(pDeleteAct)
         if len(pmenu.actions()):
             pmenu.popup(self.sender().mapToGlobal(pos))
+
+    @log_exception(True)
+    def on_browse(self, checked: bool = False):
+        index = self.treeView.currentIndex()
+        if not index.isValid():
+            return
+
+        top_parent = self.getDepthParent(index, depth=1)
+        if top_parent is None:
+            return
+
+        type_name = self.file_model.fileName(index)
+        if not type_name:
+            return
+
+        select = SelectGUI.SelectGUI(self, field_name=type_name, mode=SelectGUI.SelectGUI.Browser)
+        select.exec_()
+
+        if not select.write_flag:
+            return
+
+        name = remove_postfix(select.lineEdit.text())
+        if not name:
+            return
+
+        file_path = DataBase.AllPath[type_name][name]
+        if file_path in self.tab_item_dict:
+            self.tabWidget.setCurrentWidget(self.tab_item_dict[file_path]["widget"])
+            return
+
+        with open(file_path, "r", encoding='utf-8') as f:
+            data = json.load(f)
+
+        item = ItemGUI.ItemGUI(parent=self.tabWidget, field=type_name, key=file_path, item_name=name, readonly=True)
+        item.load_json_data(data)
+
+        self.tabWidget.addTab(item, name + self.tr(' (Readonly)'))
+        self.tab_item_dict[file_path] = {"widget": item}
+        self.tabWidget.setCurrentWidget(item)
 
     @log_exception(True)
     def on_new_so(self, checked: bool = False) -> None:
@@ -674,6 +723,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     def saveTabJsonItem(self, index: int):
         item = self.tabWidget.widget(index)
+        if isinstance(item, ItemGUI.ItemGUI) and item.readonly:
+            return
+
         treeViewIndex = self.file_model.index(item.tab_key)
         top_parent = self.getDepthParent(treeViewIndex, depth=1)
         if top_parent is None:
@@ -690,12 +742,18 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def on_tabWidgetTabCloseRequested(self, index: int, ask: bool = True):
+        item = self.tabWidget.widget(index)
+        if isinstance(item, ItemGUI.ItemGUI) and item.readonly:
+            del self.tab_item_dict[item.tab_key]
+            self.tabWidget.removeTab(index)
+            return
+
         if ask:
             reply = QMessageBox.question(self, self.tr('Save'), self.tr('Save the changes before exit?'),
                                          QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel, QMessageBox.Yes)
         else:
             reply = QMessageBox.Yes
-        item = self.tabWidget.widget(index)
+
         tab_key = item.tab_key
         if reply == QMessageBox.Yes:
             self.saveTabJsonItem(index)
@@ -769,10 +827,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     guid = ""
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=target_group_name, key=tab_key,
                                                    item_name=file_name[:-5], guid=guid,
-                                                   auto_resize=Config.AutoResize,
-                                                   auto_replace_key_guid=Config.ReplaceKey,
+                                                   replace_key=Config.ReplaceKey,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
-                item.loadJsonData(src_json, is_modify=True)
+                item.load_json_data(src_json, is_modify=True)
 
             elif top_name == "DataObjectModify":
                 key = file_name[:-5]
@@ -796,10 +853,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 src_json.update(template_json)
 
                 item = ModifyItemGUI.ModifyItemGUI(parent=self.tabWidget, field=data_type, key=tab_key,
-                                                   item_name=file_name[:-5], auto_resize=Config.AutoResize,
-                                                   auto_replace_key_guid=Config.ReplaceKey,
+                                                   item_name=file_name[:-5], replace_key=Config.ReplaceKey,
                                                    mod_info=self.mod_info, mod_path=self.mod_path)
-                item.loadJsonData(src_json, is_modify=True)
+                item.load_json_data(src_json, is_modify=True)
 
             elif top_name in DataBase.RefGuidList:
                 with open(file_path, 'r', encoding="utf-8") as f:
@@ -809,10 +865,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                     else:
                         guid = ""
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top_name, key=tab_key, item_name=file_name[:-5],
-                                       guid=guid,
-                                       auto_resize=Config.AutoResize, auto_replace_key_guid=Config.ReplaceKey,
-                                       mod_info=self.mod_info, mod_path=self.mod_path)
-                item.loadJsonData(data)
+                                       guid=guid, replace_key=Config.ReplaceKey, mod_info=self.mod_info,
+                                       mod_path=self.mod_path)
+                item.load_json_data(data)
             elif top_name == "ScriptableObject":
                 with open(file_path, 'r', encoding="utf-8") as f:
                     data = json.load(f)
@@ -824,9 +879,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 top2nd_name = self.file_model.fileName(top2nd_parent)
                 item = ItemGUI.ItemGUI(parent=self.tabWidget, field=top2nd_name, key=tab_key, item_name=file_name[:-5],
                                        guid=guid,
-                                       auto_resize=Config.AutoResize, auto_replace_key_guid=Config.ReplaceKey,
+                                       replace_key=Config.ReplaceKey,
                                        mod_info=self.mod_info, mod_path=self.mod_path)
-                item.loadJsonData(data)
+                item.load_json_data(data)
             else:
                 print("openTreeViewItem Unexport Type")
                 return
@@ -931,7 +986,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         ConfigManager.save()
         self.load_mod(mod_path)
 
-    def load_mod(self, mod_path):
+    def load_mod(self, mod_path: str):
         self.reset()
         self.mod_path = mod_path
 
