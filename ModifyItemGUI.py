@@ -1,14 +1,5 @@
 # -*- coding: utf-8 -*- 
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from Ui_Item import *
-from QJsonData import *
-from SelectGUI import *
-from NewItemGUI import *
-from ItemDelegate import *
 from ItemGUI import *
 from DataBase import *
 from MyLogger import *

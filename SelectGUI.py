@@ -1,12 +1,6 @@
 # -*- coding: utf-8 -*-
-from typing import Any
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
-
-from Ui_Select import *
-from Ui_Collection import *
+from ui.Ui_Select import *
 from DataBase import *
 
 

@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*- 
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from Ui_NewItem import *
+from ui.Ui_NewItem import *
 
 
 class NewItemGUI(QDialog, Ui_NewItem):
