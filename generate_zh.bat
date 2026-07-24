@@ -1,1 +1,0 @@
-pylupdate5 (Get-ChildItem *.py).FullName -ts zh_CN.ts
