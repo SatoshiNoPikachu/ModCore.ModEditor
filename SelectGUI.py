@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+from NewTempImgGUI import NewTempImgGUI
 from ui.Ui_Select import *
 from DataBase import *
 
@@ -26,7 +26,12 @@ class SelectGUI(QDialog, Ui_Select):
         self.use_def = False
         self.type_prefix = False
 
-        if mode == SelectGUI.NewData:
+        if mode == SelectGUI.Ref:
+            if field_name == 'Sprite':
+                btn = self.buttonBox.addButton(self.tr('Generate Temp Image'), QDialogButtonBox.ActionRole)
+                btn.clicked.connect(self.on_new_temp_image)
+
+        elif mode == SelectGUI.NewData:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Template"))
             label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
@@ -41,23 +46,23 @@ class SelectGUI(QDialog, Ui_Select):
             self.buttonBox.addButton(QDialogButtonBox.StandardButton.Yes).setText(
                 self.tr("Use Default Template"))
 
-        if mode == SelectGUI.NewModify:
+        elif mode == SelectGUI.NewModify:
             self.setWindowTitle(self.tr("Choose a ") + field_name + self.tr(" Object"))
             label = QLabel(self.tr("Name"), self)
             self.name_editor = QLineEdit(self)
             self.verticalLayout.insertWidget(0, self.name_editor)
             self.verticalLayout.insertWidget(0, label)
 
-        if mode == SelectGUI.Copy:
+        elif mode == SelectGUI.Copy:
             self.setWindowTitle(self.tr("Copy ") + field_name + self.tr(" Entries"))
 
-        if mode == SelectGUI.Append:
+        elif mode == SelectGUI.Append:
             self.setWindowTitle(self.tr("Append ") + field_name + self.tr(" Entries"))
 
-        if mode == SelectGUI.Special:
+        elif mode == SelectGUI.Special:
             self.setWindowTitle(self.tr("Add Special Entry"))
 
-        if mode == SelectGUI.Browser:
+        elif mode == SelectGUI.Browser:
             self.setWindowTitle(self.tr('Browse ') + field_name)
 
         try:
@@ -289,3 +294,9 @@ class SelectGUI(QDialog, Ui_Select):
         if button == self.buttonBox.button(QDialogButtonBox.YesToAll):
             self.write_flag = True
             self.replace_key = not self.replace_key
+
+    @log_exception(True)
+    def on_new_temp_image(self, _):
+        dialog = NewTempImgGUI(self, self.lineEdit.text())
+        if dialog.exec_() == QDialog.Accepted:
+            self.lineEdit.setText(dialog.ref_name())

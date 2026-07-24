@@ -7,6 +7,15 @@ def remove_postfix(text: str) -> str:
     return text[:i]
 
 
+def remove_namespace(text: str) -> str:
+    i = text.find(':')
+    if i == -1:
+        i = text.find('@')
+    if i == -1:
+        return text
+    return text[i + 1:]
+
+
 def is_uid_type(type_name: str) -> bool:
     from DataBase import DataBase
     return type_name in DataBase.RefGuidList

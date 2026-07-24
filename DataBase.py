@@ -51,6 +51,7 @@ def delete_keys_from_dict(src_dict, key: str):
 class DataBase(DataPack):
     DataDir = None
     CurModName = ""
+    CurModPath = None
 
     AllSpecialTypeField = {"CardData": ["BlueprintCardDataCardTabGroup", "BlueprintCardDataCardTabSubGroup",
                                         "ItemCardDataCardTabGpGroup", "MatchTypeWarpData", "MatchTagWarpData",
@@ -126,7 +127,7 @@ class DataBase(DataPack):
         path_mod = Path(mod_dir)
         path_mod.mkdir(parents=True, exist_ok=True)
 
-        path_root = path_mod.parent
+        DataBase.CurModPath = path_root = path_mod.parent
 
         path_res = path_root / "Resource"
         path_tex = path_res / "Texture2D"
