@@ -131,9 +131,10 @@ class DataBase(DataPack):
 
         path_res = path_root / "Resource"
         path_tex = path_res / "Texture2D"
-        # path_audio = path_res / "Audio"
+        path_audio = path_res / "AudioClip"
 
         DataBase.load_mod_tex(path_tex, f'{mod_name}:')
+        DataBase.load_mod_audio(path_audio, f'{mod_name}:')
 
         path_lz = path_root / f"Resource/Localization/{Config.L10nFileName}.csv"
         if path_lz.exists() and path_lz.is_file():
@@ -272,6 +273,7 @@ class DataBase(DataPack):
         cls.load_work_mod_uo(path_data, prefix)
         cls.load_work_mod_so(path_data, prefix)
         cls.load_mod_tex(path / "Resource/Texture2D", prefix)
+        cls.load_mod_audio(path / "Resource/AudioClip", prefix)
 
         return ns
 
@@ -373,14 +375,14 @@ class DataBase(DataPack):
         if not path.exists() or not path.is_dir():
             return
 
-        ext_audio = {".wav"}
+        ext_audio = {".wav", ".mp3", ".ogg"}
 
         for file in path.iterdir():
             if not file.is_file():
                 continue
 
             if file.suffix.lower() in ext_audio:
-                cls.AllRef["AudioClip"].append(file.stem)
+                cls.AllRef["AudioClip"].append(f'{prefix}{file.stem}')
 
     @classmethod
     def load_mod_tex(cls, path: Path, prefix: str):
