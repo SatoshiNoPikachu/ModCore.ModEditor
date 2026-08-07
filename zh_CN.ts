@@ -31,11 +31,6 @@
     </message>
     <message>
         <location filename="ui/Ui_Item.py" line="44"/>
-        <source>PushButton</source>
-        <translation type="obsolete">按钮</translation>
-    </message>
-    <message>
-        <location filename="ui/Ui_Item.py" line="44"/>
         <source>Turn off auto contents resize</source>
         <translation>关闭自动内容展开</translation>
     </message>
@@ -48,187 +43,137 @@
         <translation>显示未激活属性</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="72"/>
-        <source>Add blueprint main group</source>
-        <translation type="obsolete">添加蓝图主分组</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="52"/>
-        <source>Add blueprint sub group</source>
-        <translation type="obsolete">添加蓝图次分组</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="55"/>
-        <source>&lt;-Don&apos;t add that cardtype are not blueprint</source>
-        <translation type="obsolete">&lt;-不是蓝图的卡别添加</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="57"/>
-        <source>Add the CardTabGroup which it belong</source>
-        <translation type="obsolete">添加所属类型组</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="64"/>
-        <source>Add perk exclusive group</source>
-        <translation type="obsolete">添加特性互斥组</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="68"/>
-        <source>Add displayable status group</source>
-        <translation type="obsolete">添加可显示状态分组</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="82"/>
-        <source>Add character journal</source>
-        <translation type="obsolete">添加角色剧本</translation>
-    </message>
-    <message>
         <location filename="ItemGUI.py" line="65"/>
         <source>Hide invalid entries</source>
         <translation>隐藏未激活属性</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="142"/>
+        <location filename="ItemGUI.py" line="148"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="147"/>
+        <location filename="ItemGUI.py" line="153"/>
         <source>Expand All</source>
         <translation>展开全部</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="255"/>
-        <source>Collapse All</source>
-        <translation type="obsolete">折叠全部</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="162"/>
+        <location filename="ItemGUI.py" line="168"/>
         <source>Append Reference</source>
         <translation>追加引用</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="173"/>
+        <location filename="ItemGUI.py" line="179"/>
         <source>Append Inventory Slot</source>
         <translation>追加容器槽</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="177"/>
+        <location filename="ItemGUI.py" line="183"/>
         <source>Reference</source>
         <translation>引用</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="185"/>
+        <location filename="ItemGUI.py" line="190"/>
         <source>Copy Template and Overwrite</source>
         <translation>复制模板并覆盖</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="190"/>
+        <location filename="ItemGUI.py" line="195"/>
         <source>Append Template Entries</source>
         <translation>追加模板项</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="195"/>
+        <location filename="ItemGUI.py" line="200"/>
         <source>Copy Collection and Overwrite</source>
         <translation>复制收藏并覆盖</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="199"/>
+        <location filename="ItemGUI.py" line="204"/>
         <source>Save Collection</source>
         <translation>保存收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="204"/>
+        <location filename="ItemGUI.py" line="209"/>
         <source>New Empty Entry</source>
         <translation>新建空白项</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="208"/>
+        <location filename="ItemGUI.py" line="213"/>
         <source>Load Collection</source>
         <translation>载入收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="212"/>
+        <location filename="ItemGUI.py" line="217"/>
         <source>Save List Collection</source>
         <translation>收藏整个列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="216"/>
+        <location filename="ItemGUI.py" line="221"/>
         <source>Load List Collection</source>
         <translation>载入整个列表收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="220"/>
+        <location filename="ItemGUI.py" line="225"/>
         <source>Delete Whole List</source>
         <translation>删除整个列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="583"/>
+        <location filename="ItemGUI.py" line="585"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="564"/>
+        <location filename="ItemGUI.py" line="566"/>
         <source>Sure you want to delete the whole list?</source>
         <translation>确定要删除整个列表吗？</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="542"/>
+        <location filename="ItemGUI.py" line="544"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="542"/>
+        <location filename="ItemGUI.py" line="544"/>
         <source>The related collection is empty, please add the collection first</source>
         <translation>相关收藏为空，请先添加收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="397"/>
+        <location filename="ItemGUI.py" line="399"/>
         <source> type collection list</source>
         <translation>类型收藏列表</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="455"/>
+        <location filename="ItemGUI.py" line="457"/>
         <source>Add </source>
         <translation>添加</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="546"/>
+        <location filename="ItemGUI.py" line="548"/>
         <source> type collection</source>
         <translation>类型收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="455"/>
+        <location filename="ItemGUI.py" line="457"/>
         <source>[] type collection</source>
         <translation>[]类型收藏</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="499"/>
+        <location filename="ItemGUI.py" line="501"/>
         <source>Cover the collection of the same name?</source>
         <translation>是否覆盖同名收藏?</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="660"/>
-        <source>Add an object that does not belong to this Mod (possibly a Tag)?</source>
-        <translation type="obsolete">确认添加一个不属于本Mod的对象？（可能是一个Tag）</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="60"/>
-        <source>Add the CardFilterGroup which it belong</source>
-        <translation type="obsolete">添加所属卡片过滤器</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="583"/>
+        <location filename="ItemGUI.py" line="585"/>
         <source>Unspecified type, should be &quot;Type|DataKey&quot;</source>
         <translation>类型未指定，应为“Type|DataKey”</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="585"/>
+        <location filename="ItemGUI.py" line="587"/>
         <source>Information</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="ItemGUI.py" line="585"/>
+        <location filename="ItemGUI.py" line="587"/>
         <source>Type %s not found, still reference?</source>
         <translation>类型 %s 未找到，仍然引用吗？</translation>
     </message>
@@ -239,11 +184,6 @@
         <location filename="ui/Ui_Main.py" line="111"/>
         <source>ModEditor</source>
         <translation>ModEditor</translation>
-    </message>
-    <message>
-        <location filename="ui/Ui_Main.py" line="91"/>
-        <source>PushButton</source>
-        <translation type="obsolete">按钮</translation>
     </message>
     <message>
         <location filename="ui/Ui_Main.py" line="113"/>
@@ -342,11 +282,6 @@
         <location filename="main.py" line="175"/>
         <source>Turn off auto contents resize</source>
         <translation>关闭自动内容展开</translation>
-    </message>
-    <message>
-        <location filename="main.py" line="89"/>
-        <source>Open</source>
-        <translation type="obsolete">打开</translation>
     </message>
     <message>
         <location filename="main.py" line="172"/>
@@ -512,21 +447,6 @@
 <context>
     <name>ModifyItemGUI</name>
     <message>
-        <location filename="ItemGUI.py" line="153"/>
-        <source>Show invalid entries</source>
-        <translation type="obsolete">显示未激活属性</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="149"/>
-        <source>Hide invalid entries</source>
-        <translation type="obsolete">隐藏未激活属性</translation>
-    </message>
-    <message>
-        <location filename="ItemGUI.py" line="531"/>
-        <source>Add an object that does not belong to this Mod (possibly a Tag)?</source>
-        <translation type="obsolete">确认添加一个不属于本Mod的对象？（可能是一个Tag）</translation>
-    </message>
-    <message>
         <location filename="ModifyItemGUI.py" line="16"/>
         <source>Add Match CardTag</source>
         <translation>添加匹配CardTag</translation>
@@ -537,112 +457,112 @@
         <translation>添加匹配CardType</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="86"/>
+        <location filename="ModifyItemGUI.py" line="100"/>
         <source>Expand All</source>
         <translation>展开全部</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="90"/>
+        <location filename="ModifyItemGUI.py" line="104"/>
         <source>Collapse All</source>
         <translation>折叠全部</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="97"/>
+        <location filename="ModifyItemGUI.py" line="112"/>
         <source>Append Reference</source>
         <translation>追加引用</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="107"/>
+        <location filename="ModifyItemGUI.py" line="122"/>
         <source>Reference</source>
         <translation>引用</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="112"/>
+        <location filename="ModifyItemGUI.py" line="127"/>
         <source>Add Reference</source>
         <translation>添加引用</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="150"/>
+        <location filename="ModifyItemGUI.py" line="171"/>
         <source>Delete Whole List</source>
         <translation>删除整个列表</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="133"/>
+        <location filename="ModifyItemGUI.py" line="154"/>
         <source>Delete</source>
         <translation>删除</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="138"/>
+        <location filename="ModifyItemGUI.py" line="159"/>
         <source>New Empty Entry</source>
         <translation>新建空白项</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="142"/>
+        <location filename="ModifyItemGUI.py" line="163"/>
         <source>Load Collection</source>
         <translation>载入收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="146"/>
+        <location filename="ModifyItemGUI.py" line="167"/>
         <source>Load List Collection</source>
         <translation>载入整个列表收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="155"/>
+        <location filename="ModifyItemGUI.py" line="176"/>
         <source>Copy Collection and Overwrite</source>
         <translation>复制收藏并覆盖</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="160"/>
+        <location filename="ModifyItemGUI.py" line="181"/>
         <source>Reference New Empty Entry</source>
         <translation>引用新建空白项</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="163"/>
+        <location filename="ModifyItemGUI.py" line="184"/>
         <source>Reference Load Collection</source>
         <translation>引用载入收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="166"/>
+        <location filename="ModifyItemGUI.py" line="187"/>
         <source>Reference Load List Collection</source>
         <translation>引用载入整个列表收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="171"/>
+        <location filename="ModifyItemGUI.py" line="197"/>
         <source>Save List Collection</source>
         <translation>收藏整个列表</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="176"/>
+        <location filename="ModifyItemGUI.py" line="202"/>
         <source>Save Collection</source>
         <translation>收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="304"/>
+        <location filename="ModifyItemGUI.py" line="336"/>
         <source>Info</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="304"/>
+        <location filename="ModifyItemGUI.py" line="336"/>
         <source>The related collection is empty, please add the collection first</source>
         <translation>相关收藏为空，请先添加收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="308"/>
+        <location filename="ModifyItemGUI.py" line="340"/>
         <source> type collection list</source>
         <translation>类型收藏</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="454"/>
+        <location filename="ModifyItemGUI.py" line="529"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="241"/>
+        <location filename="ModifyItemGUI.py" line="273"/>
         <source>Cover the collection of the same name?</source>
         <translation>是否覆盖同名收藏?</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="454"/>
+        <location filename="ModifyItemGUI.py" line="529"/>
         <source>Presence of other types of Warp, whether to Overwrite</source>
         <translation>存在其他类型的Warp，是否覆盖</translation>
     </message>
@@ -652,19 +572,24 @@
         <translation>添加目标</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="262"/>
+        <location filename="ModifyItemGUI.py" line="294"/>
         <source>Unspecified type, should be &quot;Type|DataKey&quot;</source>
         <translation>类型未指定，应为“Type|DataKey”</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="264"/>
+        <location filename="ModifyItemGUI.py" line="296"/>
         <source>Information</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="ModifyItemGUI.py" line="264"/>
+        <location filename="ModifyItemGUI.py" line="296"/>
         <source>Type %s not found, still reference?</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="ModifyItemGUI.py" line="192"/>
+        <source>Override (use with caution)</source>
+        <translation>覆写（谨慎使用）</translation>
     </message>
 </context>
 <context>
@@ -721,22 +646,22 @@
 <context>
     <name>NewTempImgGUI</name>
     <message>
-        <location filename="NewTempImgGUI.py" line="36"/>
+        <location filename="NewTempImgGUI.py" line="37"/>
         <source>Warning</source>
         <translation>警告</translation>
     </message>
     <message>
-        <location filename="NewTempImgGUI.py" line="36"/>
+        <location filename="NewTempImgGUI.py" line="37"/>
         <source>Please enter name</source>
         <translation>请输入名称</translation>
     </message>
     <message>
-        <location filename="NewTempImgGUI.py" line="40"/>
+        <location filename="NewTempImgGUI.py" line="41"/>
         <source>Information</source>
         <translation>提示</translation>
     </message>
     <message>
-        <location filename="NewTempImgGUI.py" line="40"/>
+        <location filename="NewTempImgGUI.py" line="41"/>
         <source>File already exists. Do you want to continue?</source>
         <translation>文件已存在，是否继续？</translation>
     </message>
