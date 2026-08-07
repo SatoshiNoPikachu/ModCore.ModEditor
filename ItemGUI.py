@@ -86,7 +86,7 @@ class ItemGUI(QWidget, Ui_Item):
         else:
             srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if item.parent is None:
+        if item.parent() is None:
             return
 
         menu = QMenu(self.treeView)
@@ -129,10 +129,16 @@ class ItemGUI(QWidget, Ui_Item):
         else:
             srcModel, item, srcIndex = model, index.internalPointer(), index
 
-        if item.parent is None:
+        if item.parent() is None:
             return
 
         menu = QMenu(self.treeView)
+        self.build_context_menu(menu, item)
+
+        if len(menu.actions()):
+            menu.popup(self.sender().mapToGlobal(pos))
+
+    def build_context_menu(self, menu, item):
         if item.field() == "SpecialWarp" and item.depth() == 1:
             pDeleteAct = QAction(self.tr("Delete"), menu)
             pDeleteAct.triggered.connect(self.on_del_item)
@@ -177,8 +183,7 @@ class ItemGUI(QWidget, Ui_Item):
                 pRefAct = QAction(self.tr("Reference"), menu)
             pRefAct.triggered.connect(self.on_add_ref_item)
             menu.addAction(pRefAct)
-        elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or \
-                item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
+        elif item.field() == "WarpType" or item.field() == "WarpRef" or item.field() is None or item.field() == "" or item.field() == "SpecialWarp" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
             pass
         else:
             if item.depth() == 1:
@@ -220,9 +225,6 @@ class ItemGUI(QWidget, Ui_Item):
                 pDelListAct = QAction(self.tr("Delete Whole List"), menu)
                 pDelListAct.triggered.connect(self.on_del_list_item)
                 menu.addAction(pDelListAct)
-
-        if len(menu.actions()):
-            menu.popup(self.sender().mapToGlobal(pos))
 
     def collapse_children(self, index: QModelIndex) -> None:
         if index.isValid():

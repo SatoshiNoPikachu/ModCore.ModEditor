@@ -73,111 +73,121 @@ class ModifyItemGUI(ItemGUI):
     @log_exception(True)
     def on_tree_view_custom_context_menu_requested(self, pos: QPoint) -> None:
         index = self.treeView.currentIndex()
-        if index.isValid():
-            model = index.model()
-            if hasattr(model, "mapToSource"):
-                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-            else:
-                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if not index.isValid():
+            return
 
-            menu = QMenu(self.treeView)
-            if item.parent() is not None:
-                if item.type() == "list" or item.type() == "dict":
-                    pExpandAct = QAction(self.tr("Expand All"), menu)
-                    pExpandAct.triggered.connect(self.on_act_expand_all)
-                    menu.addAction(pExpandAct)
+        model = index.model()
+        if hasattr(model, "mapToSource"):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
 
-                    pCollapseAct = QAction(self.tr("Collapse All"), menu)
-                    pCollapseAct.triggered.connect(self.on_act_collapse_all)
-                    # menu.addAction(pCollapseAct)
+        if item.parent() is None:
+            return
 
-                if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
-                    if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
-                        if item.type() == "list":
-                            pRefAct = QAction(self.tr("Append Reference"), menu)
+        menu = QMenu(self.treeView)
+        if item.IsOverride:
+            if item.key() != '$override':
+                super().build_context_menu(menu, item)
+        else:
+            self.build_context_menu(menu, item)
 
-                            pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                            pSaveListAct.triggered.connect(self.on_save_ref_list_item)
-                            menu.addAction(pSaveListAct)
+        if len(menu.actions()):
+            menu.popup(self.sender().mapToGlobal(pos))
 
-                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                            pNewListAct.triggered.connect(self.on_load_ref_list_item)
-                            menu.addAction(pNewListAct)
-                        else:
-                            pRefAct = QAction(self.tr("Reference"), menu)
-                        pRefAct.triggered.connect(self.on_add_ref_item)
-                        menu.addAction(pRefAct)
-                    else:
-                        if item.type() == "list":
-                            pModifyRefAct = QAction(self.tr("Add Reference"), menu)
-                            pModifyRefAct.triggered.connect(self.on_addAddRefItem)
-                            menu.addAction(pModifyRefAct)
+    def build_context_menu(self, menu, item):
+        if item.type() == "list" or item.type() == "dict":
+            pExpandAct = QAction(self.tr("Expand All"), menu)
+            pExpandAct.triggered.connect(self.on_act_expand_all)
+            menu.addAction(pExpandAct)
 
-                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                            pNewListAct.triggered.connect(self.on_addLoadRefListItem)
-                            menu.addAction(pNewListAct)
-                elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or \
-                        item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or \
-                        item.field() == "WarpAdd" or item.field() == "WarpModify":
-                    pass
-                elif item.key().endswith("WarpType"):
-                    pass
-                elif item.key().endswith("WarpData"):
-                    if item.type() == "list":
-                        pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                        pDelListAct.triggered.connect(self.on_del_list_item)
-                        menu.addAction(pDelListAct)
+            pCollapseAct = QAction(self.tr("Collapse All"), menu)
+            pCollapseAct.triggered.connect(self.on_act_collapse_all)
+            # menu.addAction(pCollapseAct)
+
+        if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
+            if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
+                if item.type() == "list":
+                    pRefAct = QAction(self.tr("Append Reference"), menu)
+
+                    pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                    pSaveListAct.triggered.connect(self.on_save_ref_list_item)
+                    menu.addAction(pSaveListAct)
+
+                    pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                    pNewListAct.triggered.connect(self.on_load_ref_list_item)
+                    menu.addAction(pNewListAct)
                 else:
-                    if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
-                        if item.parent().type() == "list":
-                            pDeleteAct = QAction(self.tr("Delete"), menu)
-                            pDeleteAct.triggered.connect(self.on_del_item_from_list)
-                            menu.addAction(pDeleteAct)
+                    pRefAct = QAction(self.tr("Reference"), menu)
+                pRefAct.triggered.connect(self.on_add_ref_item)
+                menu.addAction(pRefAct)
+            else:
+                if item.type() == "list":
+                    pModifyRefAct = QAction(self.tr("Add Reference"), menu)
+                    pModifyRefAct.triggered.connect(self.on_addAddRefItem)
+                    menu.addAction(pModifyRefAct)
 
-                        if item.type() == "list":
-                            pNewAct = QAction(self.tr("New Empty Entry"), menu)
-                            pNewAct.triggered.connect(self.on_new_item_to_list)
-                            menu.addAction(pNewAct)
+                    pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                    pNewListAct.triggered.connect(self.on_addLoadRefListItem)
+                    menu.addAction(pNewListAct)
+        elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or item.field() == "WarpAdd" or item.field() == "WarpModify":
+            pass
+        elif item.key().endswith("WarpType"):
+            pass
+        elif item.key().endswith("WarpData"):
+            if item.type() == "list":
+                pDelListAct = QAction(self.tr("Delete Whole List"), menu)
+                pDelListAct.triggered.connect(self.on_del_list_item)
+                menu.addAction(pDelListAct)
+        else:
+            if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
+                if item.parent().type() == "list":
+                    pDeleteAct = QAction(self.tr("Delete"), menu)
+                    pDeleteAct.triggered.connect(self.on_del_item_from_list)
+                    menu.addAction(pDeleteAct)
 
-                            pNewAct = QAction(self.tr("Load Collection"), menu)
-                            pNewAct.triggered.connect(self.on_load_item)
-                            menu.addAction(pNewAct)
+                if item.type() == "list":
+                    pNewAct = QAction(self.tr("New Empty Entry"), menu)
+                    pNewAct.triggered.connect(self.on_new_item_to_list)
+                    menu.addAction(pNewAct)
 
-                            pNewListAct = QAction(self.tr("Load List Collection"), menu)
-                            pNewListAct.triggered.connect(self.on_load_list_item)
-                            menu.addAction(pNewListAct)
+                    pNewAct = QAction(self.tr("Load Collection"), menu)
+                    pNewAct.triggered.connect(self.on_load_item)
+                    menu.addAction(pNewAct)
 
-                            pDelListAct = QAction(self.tr("Delete Whole List"), menu)
-                            pDelListAct.triggered.connect(self.on_del_list_item)
-                            menu.addAction(pDelListAct)
+                    pNewListAct = QAction(self.tr("Load List Collection"), menu)
+                    pNewListAct.triggered.connect(self.on_load_list_item)
+                    menu.addAction(pNewListAct)
 
-                        if item.type() == "dict":
-                            pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
-                            pCopyCollAct.triggered.connect(self.on_copy_coll_item)
-                            menu.addAction(pCopyCollAct)
-                    else:
-                        if item.type() == "list":
-                            pNewAct = QAction(self.tr("Reference New Empty Entry"), menu)
-                            pNewAct.triggered.connect(self.on_addEmptyItem)
-                            menu.addAction(pNewAct)
-                            pLoadAct = QAction(self.tr("Reference Load Collection"), menu)
-                            pLoadAct.triggered.connect(self.on_loadCollItem)
-                            menu.addAction(pLoadAct)
-                            pLoadListAct = QAction(self.tr("Reference Load List Collection"), menu)
-                            pLoadListAct.triggered.connect(self.on_loadCollListItem)
-                            menu.addAction(pLoadListAct)
+                    pDelListAct = QAction(self.tr("Delete Whole List"), menu)
+                    pDelListAct.triggered.connect(self.on_del_list_item)
+                    menu.addAction(pDelListAct)
 
-                    if item.type() == "list":
-                        pSaveListAct = QAction(self.tr("Save List Collection"), menu)
-                        pSaveListAct.triggered.connect(self.on_save_list_item)
-                        menu.addAction(pSaveListAct)
+                if item.type() == "dict":
+                    pCopyCollAct = QAction(self.tr("Copy Collection and Overwrite"), menu)
+                    pCopyCollAct.triggered.connect(self.on_copy_coll_item)
+                    menu.addAction(pCopyCollAct)
+            else:
+                if item.type() == "list":
+                    pNewAct = QAction(self.tr("Reference New Empty Entry"), menu)
+                    pNewAct.triggered.connect(self.on_addEmptyItem)
+                    menu.addAction(pNewAct)
+                    pLoadAct = QAction(self.tr("Reference Load Collection"), menu)
+                    pLoadAct.triggered.connect(self.on_loadCollItem)
+                    menu.addAction(pLoadAct)
+                    pLoadListAct = QAction(self.tr("Reference Load List Collection"), menu)
+                    pLoadListAct.triggered.connect(self.on_loadCollListItem)
+                    menu.addAction(pLoadListAct)
 
-                    if item.type() == "dict":
-                        pSaveAct = QAction(self.tr("Save Collection"), menu)
-                        pSaveAct.triggered.connect(self.on_save_item)
-                        menu.addAction(pSaveAct)
-            if len(menu.actions()):
-                menu.popup(self.sender().mapToGlobal(pos))
+            if item.type() == "list":
+                pSaveListAct = QAction(self.tr("Save List Collection"), menu)
+                pSaveListAct.triggered.connect(self.on_save_list_item)
+                menu.addAction(pSaveListAct)
+
+            if item.type() == "dict":
+                pSaveAct = QAction(self.tr("Save Collection"), menu)
+                pSaveAct.triggered.connect(self.on_save_item)
+                menu.addAction(pSaveAct)
 
     @log_exception(True)
     def on_loadCollItem(self, checked: bool = False) -> None:
@@ -327,46 +337,36 @@ class ModifyItemGUI(ItemGUI):
         self.addWarpItem(index, "Empty")
 
     def addWarpItem(self, index: QModelIndex, mode: str, param: str = ""):
-        if index.isValid():
-            model = index.model()
-            if hasattr(model, "mapToSource"):
-                srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
-            else:
-                srcModel, item, srcIndex = model, index.internalPointer(), index
+        if not index.isValid():
+            return
 
-            src_field = item.field()
-            item_stack = []
-            item_stack.append({"item": item, "index": srcIndex})
-            while item.parent():
-                item_stack.append({"item": item.parent(), "index": srcIndex.parent()})
-                item = item.parent()
-                srcIndex = srcIndex.parent()
+        model = index.model()
+        if hasattr(model, "mapToSource"):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
 
-            parentItem, parentIndex = item_stack.pop().values()
-            warpDataItem, warpDataIndex = None, None
-            while len(item_stack) != 0:
-                childItem, childIndex = item_stack.pop().values()
-                if len(item_stack) > 0:
-                    if warpDataItem is None:
-                        if childItem.key() + "WarpType" in parentItem.mChilds:
-                            if parentItem.mChilds[childItem.key() + "WarpType"].value() != 5:
-                                reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
-                                    "Presence of other types of Warp, whether to Overwrite"),
-                                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                                if reply == QMessageBox.No:
-                                    return
-                                self.model.addModifyWarp(childIndex, srcItem=childItem)
-                                warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
-                                warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
-                                if childItem.type() == "list":
-                                    for key in childItem.mChilds.keys():
-                                        self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
-                                elif childItem.type() == "dict":
-                                    pass
-                            else:
-                                warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
-                                warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
-                        else:
+        src_field = item.field()
+        item_stack = []
+        item_stack.append({"item": item, "index": srcIndex})
+        while item.parent():
+            item_stack.append({"item": item.parent(), "index": srcIndex.parent()})
+            item = item.parent()
+            srcIndex = srcIndex.parent()
+
+        parentItem, parentIndex = item_stack.pop().values()
+        warpDataItem, warpDataIndex = None, None
+        while len(item_stack) != 0:
+            childItem, childIndex = item_stack.pop().values()
+            if len(item_stack) > 0:
+                if warpDataItem is None:
+                    if childItem.key() + "WarpType" in parentItem.mChilds:
+                        if parentItem.mChilds[childItem.key() + "WarpType"].value() != 5:
+                            reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
+                                "Presence of other types of Warp, whether to Overwrite"),
+                                                         QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                            if reply == QMessageBox.No:
+                                return
                             self.model.addModifyWarp(childIndex, srcItem=childItem)
                             warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
@@ -375,108 +375,120 @@ class ModifyItemGUI(ItemGUI):
                                     self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
                             elif childItem.type() == "dict":
                                 pass
+                        else:
+                            warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
+                            warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
                     else:
-                        if parentItem.type() == "list":
-                            warpDataItem = warpDataItem.mChilds[childItem.key()]
-                            warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
-                        elif parentItem.type() == "dict":
-                            if childItem.key() + "WarpType" in warpDataItem.mChilds:
-                                if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 5:
-                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
-                                        "Presence of other types of Warp, whether to Overwrite"),
-                                                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                                    if reply == QMessageBox.No:
-                                        return
-                                    self.model.addModifyWarp(warpDataIndex, srcItem=childItem, brother=False)
-                                    warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
-                                    warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
-                                    if childItem.type() == "list":
-                                        for key in childItem.mChilds.keys():
-                                            self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
-                                    elif childItem.type() == "dict":
-                                        pass
-                                else:
-                                    warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
-                                    warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
-                            else:
+                        self.model.addModifyWarp(childIndex, srcItem=childItem)
+                        warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
+                        warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
+                        if childItem.type() == "list":
+                            for key in childItem.mChilds.keys():
+                                self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
+                        elif childItem.type() == "dict":
+                            pass
+                else:
+                    if parentItem.type() == "list":
+                        warpDataItem = warpDataItem.mChilds[childItem.key()]
+                        warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
+                    elif parentItem.type() == "dict":
+                        if childItem.key() + "WarpType" in warpDataItem.mChilds:
+                            if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 5:
+                                reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
+                                    "Presence of other types of Warp, whether to Overwrite"),
+                                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                if reply == QMessageBox.No:
+                                    return
                                 self.model.addModifyWarp(warpDataIndex, srcItem=childItem, brother=False)
                                 warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
                                 warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
                                 if childItem.type() == "list":
-                                    print("key", childItem.key(), childItem.mChilds.keys())
                                     for key in childItem.mChilds.keys():
                                         self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
                                 elif childItem.type() == "dict":
                                     pass
-                        else:
-                            print("Unexpect type 1 !!!")
-                else:
-                    if warpDataItem is None:
-                        if src_field in DataBase.RefNameList or src_field in DataBase.RefGuidList or src_field == "ScriptableObject":
-                            self.model.addAddRefWarp(childIndex, param, key=childItem.key())
-                        else:
-                            if childItem.key() + "WarpType" in parentItem.mChilds:
-                                if parentItem.mChilds[childItem.key() + "WarpType"].value() != 4:
-                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
-                                        "Presence of other types of Warp, whether to Overwrite"),
-                                                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                                    if reply == QMessageBox.No:
-                                        return
-                                    self.model.addAddWarp(childIndex, srcItem=childItem)
                             else:
-                                self.model.addAddWarp(childIndex, srcItem=childItem)
-                            warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
-                            warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
-                            if warpDataItem.type() == "list":
-                                if mode == "Empty":
-                                    if childItem.field() in DataBase.AllBaseJsonData:
-                                        data = DataBase.AllBaseJsonData[childItem.field()]
-                                    child_key = 0
-                                    while str(child_key) in warpDataItem.mChilds:
-                                        child_key += 1
-                                    self.model.addJsonItem(warpDataIndex, data, childItem.field(), str(child_key))
-                                elif mode == "Collection":
-                                    child_key = 0
-                                    while str(child_key) in warpDataItem.mChilds:
-                                        child_key += 1
-                                    self.model.addJsonItem(warpDataIndex, param, childItem.field(), str(child_key))
-                                elif mode == "Ref":
-                                    return
-                            else:
-                                print("Unexpect type 2 !!!")
-                    else:
-                        if src_field in DataBase.RefNameList or src_field in DataBase.RefGuidList or src_field == "ScriptableObject":
-                            print(warpDataItem.key())
-                            self.model.addAddRefWarp(warpDataIndex, param, key=childItem.key(), brother=False)
+                                warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
+                                warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
                         else:
-                            if childItem.key() + "WarpType" in warpDataItem.mChilds:
-                                if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 4:
-                                    reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
-                                        "Presence of other types of Warp, whether to Overwrite"),
-                                                                 QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
-                                    if reply == QMessageBox.No:
-                                        return
-                                    self.model.addAddWarp(warpDataIndex, srcItem=childItem, brother=False)
-                            else:
-                                self.model.addAddWarp(warpDataIndex, srcItem=childItem, brother=False)
+                            self.model.addModifyWarp(warpDataIndex, srcItem=childItem, brother=False)
                             warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
                             warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
-                            if warpDataItem.type() == "list":
-                                if mode == "Empty":
-                                    if childItem.field() in DataBase.AllBaseJsonData:
-                                        data = DataBase.AllBaseJsonData[childItem.field()]
-                                    child_key = 0
-                                    while str(child_key) in warpDataItem.mChilds:
-                                        child_key += 1
-                                    self.model.addJsonItem(warpDataIndex, data, childItem.field(), str(child_key))
-                                elif mode == "Collection":
-                                    child_key = 0
-                                    while str(child_key) in warpDataItem.mChilds:
-                                        child_key += 1
-                                    self.model.addJsonItem(warpDataIndex, param, childItem.field(), str(child_key))
-                                elif mode == "Ref":
+                            if childItem.type() == "list":
+                                print("key", childItem.key(), childItem.mChilds.keys())
+                                for key in childItem.mChilds.keys():
+                                    self.model.addItem(warpDataIndex, key, dict, "", childItem.field(), True)
+                            elif childItem.type() == "dict":
+                                pass
+                    else:
+                        print("Unexpect type 1 !!!")
+            else:
+                if warpDataItem is None:
+                    if src_field in DataBase.RefNameList or src_field in DataBase.RefGuidList or src_field == "ScriptableObject":
+                        self.model.addAddRefWarp(childIndex, param, key=childItem.key())
+                    else:
+                        if childItem.key() + "WarpType" in parentItem.mChilds:
+                            if parentItem.mChilds[childItem.key() + "WarpType"].value() != 4:
+                                reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
+                                    "Presence of other types of Warp, whether to Overwrite"),
+                                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                if reply == QMessageBox.No:
                                     return
-                            else:
-                                print("Unexpect type 3 !!!")
-                parentItem = childItem
-                parentIndex = childIndex
+                                self.model.addAddWarp(childIndex, srcItem=childItem)
+                        else:
+                            self.model.addAddWarp(childIndex, srcItem=childItem)
+                        warpDataItem = parentItem.mChilds[childItem.key() + "WarpData"]
+                        warpDataIndex = self.model.index(warpDataItem.row(), 0, parentIndex)
+                        if warpDataItem.type() == "list":
+                            if mode == "Empty":
+                                if childItem.field() in DataBase.AllBaseJsonData:
+                                    data = DataBase.AllBaseJsonData[childItem.field()]
+                                child_key = 0
+                                while str(child_key) in warpDataItem.mChilds:
+                                    child_key += 1
+                                self.model.addJsonItem(warpDataIndex, data, childItem.field(), str(child_key))
+                            elif mode == "Collection":
+                                child_key = 0
+                                while str(child_key) in warpDataItem.mChilds:
+                                    child_key += 1
+                                self.model.addJsonItem(warpDataIndex, param, childItem.field(), str(child_key))
+                            elif mode == "Ref":
+                                return
+                        else:
+                            print("Unexpect type 2 !!!")
+                else:
+                    if src_field in DataBase.RefNameList or src_field in DataBase.RefGuidList or src_field == "ScriptableObject":
+                        print(warpDataItem.key())
+                        self.model.addAddRefWarp(warpDataIndex, param, key=childItem.key(), brother=False)
+                    else:
+                        if childItem.key() + "WarpType" in warpDataItem.mChilds:
+                            if warpDataItem.mChilds[childItem.key() + "WarpType"].value() != 4:
+                                reply = QMessageBox.question(self, self.tr("Warning"), self.tr(
+                                    "Presence of other types of Warp, whether to Overwrite"),
+                                                             QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+                                if reply == QMessageBox.No:
+                                    return
+                                self.model.addAddWarp(warpDataIndex, srcItem=childItem, brother=False)
+                        else:
+                            self.model.addAddWarp(warpDataIndex, srcItem=childItem, brother=False)
+                        warpDataItem = warpDataItem.mChilds[childItem.key() + "WarpData"]
+                        warpDataIndex = self.model.index(warpDataItem.row(), 0, warpDataIndex)
+                        if warpDataItem.type() == "list":
+                            if mode == "Empty":
+                                if childItem.field() in DataBase.AllBaseJsonData:
+                                    data = DataBase.AllBaseJsonData[childItem.field()]
+                                child_key = 0
+                                while str(child_key) in warpDataItem.mChilds:
+                                    child_key += 1
+                                self.model.addJsonItem(warpDataIndex, data, childItem.field(), str(child_key))
+                            elif mode == "Collection":
+                                child_key = 0
+                                while str(child_key) in warpDataItem.mChilds:
+                                    child_key += 1
+                                self.model.addJsonItem(warpDataIndex, param, childItem.field(), str(child_key))
+                            elif mode == "Ref":
+                                return
+                        else:
+                            print("Unexpect type 3 !!!")
+            parentItem = childItem
+            parentIndex = childIndex
