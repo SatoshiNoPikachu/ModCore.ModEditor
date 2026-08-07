@@ -105,8 +105,9 @@ class ModifyItemGUI(ItemGUI):
             pCollapseAct.triggered.connect(self.on_act_collapse_all)
             # menu.addAction(pCollapseAct)
 
+        top = item.parentDepth(1)
         if item.field() in DataBase.RefNameList or item.field() in DataBase.RefGuidList or item.field() == "ScriptableObject":
-            if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
+            if top is not None and top.key().endswith("WarpData"):
                 if item.type() == "list":
                     pRefAct = QAction(self.tr("Append Reference"), menu)
 
@@ -130,7 +131,15 @@ class ModifyItemGUI(ItemGUI):
                     pNewListAct = QAction(self.tr("Load List Collection"), menu)
                     pNewListAct.triggered.connect(self.on_addLoadRefListItem)
                     menu.addAction(pNewListAct)
-        elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or item.field() == "None" or item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String" or item.field() == "WarpAdd" or item.field() == "WarpModify":
+
+                if top is None or top.type() != 'list':
+                    act_override = QAction(self.tr("Override (use with caution)"), menu)
+                    act_override.triggered.connect(self.on_make_override)
+                    menu.addAction(act_override)
+
+        # elif item.field() == "Boolean" or item.field() == "Int32" or item.field() == "Single" or item.field() == "String":
+        #     pass
+        elif item.field() == "WarpType" or item.field() == "WarpData" or item.field() is None or item.field() == "" or item.field() == "None" or item.field() == "WarpAdd" or item.field() == "WarpModify":
             pass
         elif item.key().endswith("WarpType"):
             pass
@@ -140,7 +149,7 @@ class ModifyItemGUI(ItemGUI):
                 pDelListAct.triggered.connect(self.on_del_list_item)
                 menu.addAction(pDelListAct)
         else:
-            if item.parentDepth(1) is not None and item.parentDepth(1).key().endswith("WarpData"):
+            if top is not None and top.key().endswith("WarpData"):
                 if item.parent().type() == "list":
                     pDeleteAct = QAction(self.tr("Delete"), menu)
                     pDeleteAct.triggered.connect(self.on_del_item_from_list)
@@ -179,6 +188,11 @@ class ModifyItemGUI(ItemGUI):
                     pLoadListAct.triggered.connect(self.on_loadCollListItem)
                     menu.addAction(pLoadListAct)
 
+                if item.type() != "dict" and (top is None or top.type() != 'list'):
+                    act_override = QAction(self.tr("Override (use with caution)"), menu)
+                    act_override.triggered.connect(self.on_make_override)
+                    menu.addAction(act_override)
+
             if item.type() == "list":
                 pSaveListAct = QAction(self.tr("Save List Collection"), menu)
                 pSaveListAct.triggered.connect(self.on_save_list_item)
@@ -188,6 +202,14 @@ class ModifyItemGUI(ItemGUI):
                 pSaveAct = QAction(self.tr("Save Collection"), menu)
                 pSaveAct.triggered.connect(self.on_save_item)
                 menu.addAction(pSaveAct)
+
+    @log_exception(True)
+    def on_make_override(self, checked: bool = False):
+        index = self.treeView.currentIndex()
+        if not index.isValid():
+            return
+
+        self.add_override_item(index)
 
     @log_exception(True)
     def on_loadCollItem(self, checked: bool = False) -> None:
@@ -335,6 +357,47 @@ class ModifyItemGUI(ItemGUI):
     def on_addEmptyItem(self, checked: bool = False):
         index = self.treeView.currentIndex()
         self.addWarpItem(index, "Empty")
+
+    def add_override_item(self, index: QModelIndex):
+        if not index.isValid():
+            return
+
+        model = index.model()
+        if hasattr(model, "mapToSource"):
+            src_model, item, src_index = model.getSourceModelItemIndex(index)
+        else:
+            src_model, item, src_index = model, index.internalPointer(), index
+
+        path: list[tuple[QJsonTreeItem, QModelIndex]] = []
+        current: QJsonTreeItem = item
+
+        while parent := current.parent():
+            if parent.type() == 'list':
+                return
+
+            path.append((current, src_index))
+            current = parent
+            src_index = src_index.parent()
+
+        root = self.model.mRootItem
+        if "$override" not in root.mChilds:
+            self.model.addItem(QModelIndex(), "$override", dict, "", "SpecialWarp", True).IsOverride = True
+
+        parent = root.mChilds["$override"]
+        parent_index = self.model.index(parent.row(), 0, QModelIndex())
+
+        for node, node_index in reversed(path):
+            key = node.key()
+
+            if p := parent.mChilds.get(key):
+                parent = p
+                parent_index = self.model.index(parent.row(), 0, parent_index)
+                continue
+
+            parent = self.model.addItem(parent_index, key, node.type(), node.value(), node.field(), True)
+            parent.IsOverride = True
+
+            parent_index = self.model.index(parent.row(), 0, parent_index)
 
     def addWarpItem(self, index: QModelIndex, mode: str, param: str = ""):
         if not index.isValid():

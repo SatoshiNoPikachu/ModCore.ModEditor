@@ -96,7 +96,7 @@ class QJsonTreeItem(object):
 
     def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
-            if value == "True":
+            if value:
                 self.mValue = True
             else:
                 self.mValue = False
@@ -825,6 +825,7 @@ class QJsonModel(QAbstractItemModel):
             item.appendChild(key, childItem)
             item.setVaild(True)
             self.endInsertRows()
+            return childItem
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
