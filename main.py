@@ -20,7 +20,7 @@ import ExportToZip
 from glob import glob
 from pathlib import Path
 
-ModEditorVersion = "1.2.2"
+ModEditorVersion = "1.3.0"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
