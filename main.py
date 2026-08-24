@@ -556,10 +556,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 if not name:
                     return
 
-                data = DataBase.AllBaseJsonData.get(type_name)
+                data: dict | None = DataBase.AllBaseJsonData.get(type_name)
                 if data is None:
                     QMessageBox.warning(self, self.tr("Warning"), self.tr('No default template'))
                     return
+
+                data = data.copy()
+                data['UniqueID'] = uuid.uuid4().hex
 
                 with path.open("w", encoding='utf-8') as f:
                     json.dump(data, f, sort_keys=True, ensure_ascii=False)
@@ -569,7 +572,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 with open(DataBase.AllPath[type_name][template_key], "r", encoding="utf-8") as f:
                     temp_json = json.load(f)
 
-                temp_json["UniqueID"] = str(uuid.uuid4()).replace("-", "")
+                temp_json["UniqueID"] = uuid.uuid4().hex
 
                 if select.replace_key and Config.ReplaceKey:
                     replace_l10n_key(temp_json, self.mod_info["Namespace"], name)
