@@ -7,6 +7,10 @@ from utils import remove_postfix
 from MyLogger import *
 
 
+class MainPackMissingError(Exception):
+    pass
+
+
 class PackInfo:
 
     @classmethod
@@ -80,7 +84,7 @@ class DataPack:
             cls.Packs[info.name] = info
 
         if cls.MainPack is None:
-            raise Exception('Not installed main package!')
+            raise MainPackMissingError
 
         cls.load_pack(cls.MainPack)
 

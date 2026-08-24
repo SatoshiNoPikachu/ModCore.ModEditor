@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from Config import ConfigManager, Config
+from DataPack import MainPackMissingError
 
 ConfigManager.load()
 if Config.FactorAppScale:
@@ -62,7 +63,11 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
     @log_exception(True)
     def dataInit(self):
-        DataBase.loadDataBase(QDir.currentPath(), Config.Language)
+        try:
+            DataBase.loadDataBase(QDir.currentPath(), Config.Language)
+        except MainPackMissingError:
+            QMessageBox.warning(self, self.tr('Warning'), self.tr(
+                'The main data package is not installed. The program will not function properly!'))
 
     def ui_Init(self):
         self.treeView.doubleClicked.connect(self.on_treeViewDoubleClicked)
