@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+
 from Config import ConfigManager, Config
 from DataPack import MainPackMissingError
 
@@ -7,11 +8,20 @@ ConfigManager.load()
 if Config.FactorAppScale:
     os.environ["QT_SCALE_FACTOR"] = Config.FactorAppScale
 
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
+from DataBase import DataBase
+from utils import *
 from ui.Ui_Main import *
 
+import ujson as json
+import traceback
 import sys
 import shutil
 import uuid
+from MyLogger import *
 from DataBase import *
 import ItemGUI
 import NewItemGUI
@@ -19,7 +29,6 @@ import ModifyItemGUI
 import SelectGUI
 import ExportToZip
 from glob import glob
-from pathlib import Path
 
 ModEditorVersion = "1.3.0"
 

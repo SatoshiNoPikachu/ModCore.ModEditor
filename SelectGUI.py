@@ -1,6 +1,12 @@
 # -*- coding: utf-8 -*-
-from NewTempImgGUI import NewTempImgGUI
+from typing import Any
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+
 from ui.Ui_Select import *
+from ui.Ui_Collection import *
 from DataBase import *
 
 

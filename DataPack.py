@@ -1,10 +1,11 @@
-import yaml
-import ujson as json
 from pathlib import Path
+
+import ujson as json
+import yaml
+from PyQt5 import QtCore
 
 from Config import Config
 from utils import remove_postfix
-from MyLogger import *
 
 
 class MainPackMissingError(Exception):

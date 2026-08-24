@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
-import csv
-from pathlib import Path
-import ujson as json
-import os
 import copy
+import csv
+import os
+import traceback
 from glob import glob
+from pathlib import Path
+
+import ujson as json
+from PyQt5 import QtCore
 
 from Config import Config
 from DataPack import DataPack
+from MyLogger import log_exception
 from utils import *
-from MyLogger import *
 
 
 def replace_l10n_key(data: dict, mod_name: str, obj_name: str, guid: str = "",
