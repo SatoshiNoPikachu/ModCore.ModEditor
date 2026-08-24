@@ -2,7 +2,6 @@
 import os
 
 from Config import ConfigManager, Config
-from DataPack import MainPackMissingError
 
 ConfigManager.load()
 if Config.FactorAppScale:
@@ -12,7 +11,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from DataBase import DataBase
+from DataPack import MainPackMissingError
 from utils import *
 from ui.Ui_Main import *
 

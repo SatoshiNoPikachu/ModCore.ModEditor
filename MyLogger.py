@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*- 
 
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+import traceback
 
 from PyQt5 import QtCore
-import traceback
+from PyQt5.QtCore import QFile, QIODevice, QTextStream
+from PyQt5.QtWidgets import QMessageBox
 
 logFile = None
 logStream = None
