@@ -387,14 +387,12 @@ class ModifyItemGUI(ItemGUI):
         parent_index = self.model.index(parent.row(), 0, QModelIndex())
 
         for node, node_index in reversed(path):
-            key = node.key()
-
-            if p := parent.mChilds.get(key):
+            if p := parent.mChilds.get(node.key()):
                 parent = p
                 parent_index = self.model.index(parent.row(), 0, parent_index)
                 continue
 
-            parent = self.model.addItem(parent_index, key, node.type(), node.value(), node.field(), True)
+            parent = self.model.clone_item(parent_index, node)
             parent.IsOverride = True
 
             parent_index = self.model.index(parent.row(), 0, parent_index)

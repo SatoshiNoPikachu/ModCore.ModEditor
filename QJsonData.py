@@ -50,6 +50,7 @@ class QJsonTreeItem(object):
         except Exception as ex:
             return None
 
+    @staticmethod
     def newItem(parent, mKey=None, mType=None, mValue=None, mField=None, mVaild=False):
         item = QJsonTreeItem(parent)
         if parent is None:
@@ -61,6 +62,22 @@ class QJsonTreeItem(object):
         item.setValue(mValue)
         item.setField(mField)
         item.setVaild(mVaild)
+        return item
+
+    @staticmethod
+    def clone_item(parent: QJsonTreeItem, source: QJsonTreeItem):
+        item = QJsonTreeItem(parent)
+
+        item.setDepth(0 if parent is None else parent.depth() + 1)
+        item.mKey = source.key()
+        item.setType(source.type())
+        item.mValue = source.value()
+        item.setField(source.field())
+        item.setVaild(source.valid())
+        item.setNote(source.note())
+        item.comment = source.comment
+        item.display_key = source.display_key
+
         return item
 
     def parent(self):
@@ -96,7 +113,7 @@ class QJsonTreeItem(object):
 
     def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
-            if value:
+            if value == "True":
                 self.mValue = True
             else:
                 self.mValue = False
@@ -828,6 +845,22 @@ class QJsonModel(QAbstractItemModel):
             return childItem
         except Exception as ex:
             QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
+
+    def clone_item(self, index: QModelIndex, item: QJsonTreeItem):
+        parent = index.internalPointer()
+        if parent is None:
+            parent = self.mRootItem
+
+        key = item.key()
+        if key in parent.mChilds:
+            childIndex = self.index(parent.childRow(key), 0, index)
+            self.deleteItem(childIndex)
+
+        self.beginInsertRows(index, parent.childCount(), parent.childCount())
+        child = QJsonTreeItem.clone_item(parent, item)
+        parent.appendChild(key, child)
+        self.endInsertRows()
+        return child
 
     def deleteBrother(self, index: QModelIndex, key: str):
         try:
