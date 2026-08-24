@@ -29,7 +29,7 @@ import SelectGUI
 import ExportToZip
 from glob import glob
 
-ModEditorVersion = "1.3.0"
+ModEditorVersion = "1.3.1"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
