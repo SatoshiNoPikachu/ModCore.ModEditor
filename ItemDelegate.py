@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*- 
-
+# -*- coding: utf-8 -*-
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from DataBase import *
-from SelectGUI import *
+from DataBase import DataBase
+from SelectGUI import SelectGUI
 
 
 class ItemDelegate(QItemDelegate):

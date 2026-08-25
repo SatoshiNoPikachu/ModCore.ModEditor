@@ -1,11 +1,9 @@
-# -*- coding: utf-8 -*- 
-
+# -*- coding: utf-8 -*-
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from ui.Ui_Collection import *
-from DataBase import *
+from MyLogger import log_exception
+from ui.Ui_Collection import Ui_Collection
 
 
 class CollectionGUI(QDialog, Ui_Collection):

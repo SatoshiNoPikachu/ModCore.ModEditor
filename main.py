@@ -7,27 +7,29 @@ ConfigManager.load()
 if Config.FactorAppScale:
     os.environ["QT_SCALE_FACTOR"] = Config.FactorAppScale
 
+import shutil
+import sys
+import traceback
+import uuid
+from glob import glob
+from pathlib import Path
+
+import ujson as json
+from PyQt5 import QtCore
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from DataPack import MainPackMissingError
-from utils import *
-from ui.Ui_Main import *
-
-import ujson as json
-import traceback
-import sys
-import shutil
-import uuid
-from MyLogger import *
-from DataBase import *
-import ItemGUI
-import NewItemGUI
-import ModifyItemGUI
-import SelectGUI
 import ExportToZip
-from glob import glob
+import ItemGUI
+import ModifyItemGUI
+import NewItemGUI
+import SelectGUI
+from DataBase import DataBase, replace_l10n_key
+from DataPack import MainPackMissingError
+from MyLogger import logInit, log_exception
+from ui.Ui_Main import Ui_MainWindow
+from utils import *
 
 ModEditorVersion = "1.3.1"
 
@@ -98,7 +100,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         else:
             self.action_AutoCompleteUpdates.setText(self.tr("Turn on auto completion updates"))
 
-        width = QtWidgets.qApp.desktop().availableGeometry(self).width()
+        width = qApp.desktop().availableGeometry(self).width()
         self.splitter.setSizes([int(width * 1 / 8), int(width * 7 / 8)])
         for i in range(self.splitter.count()):
             self.splitter.setCollapsible(i, False)

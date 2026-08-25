@@ -1,15 +1,13 @@
-# -*- coding: utf-8 -*- 
-
-import sys
+# -*- coding: utf-8 -*-
 import re
 import traceback
 
-from Config import Config
-from DataBase import *
-
+from PyQt5 import QtCore
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import *
+
+from Config import Config
+from DataBase import DataBase
+from utils import *
 
 pattern_number = ''': [1-9]'''
 pattern_decimal = ''': 0.0*[1-9]{1,}.*?,'''

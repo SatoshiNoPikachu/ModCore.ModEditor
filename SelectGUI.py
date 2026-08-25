@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
-from typing import Any
+import traceback
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from ui.Ui_Select import *
-from ui.Ui_Collection import *
-from DataBase import *
+from DataBase import DataBase
+from MyLogger import log_exception
+from NewTempImgGUI import NewTempImgGUI
+from ui.Ui_Select import Ui_Select
 
 
 class SelectGUI(QDialog, Ui_Select):

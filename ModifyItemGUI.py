@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+import copy
 
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from ui.Ui_Item import *
-from QJsonData import *
-from SelectGUI import *
-from NewItemGUI import *
-from ItemDelegate import *
-from ItemGUI import *
-from DataBase import *
-from MyLogger import *
+from CollectionGUI import CollectionGUI
+from DataBase import DataBase, replace_l10n_key
+from ItemGUI import ItemGUI
+from MyLogger import log_exception
+from QJsonData import QJsonTreeItem
+from SelectGUI import SelectGUI
+from utils import *
 
 
 class ModifyItemGUI(ItemGUI):

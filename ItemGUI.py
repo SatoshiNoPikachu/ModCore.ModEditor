@@ -1,15 +1,20 @@
 # -*- coding: utf-8 -*-
+import copy
+
+import ujson as json
 from PyQt5.QtCore import *
-from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
-from ui.Ui_Item import *
-from QJsonData import *
-from SelectGUI import *
-from NewItemGUI import *
-from ItemDelegate import *
-from CollectionGUI import *
-from DataBase import *
+from CollectionGUI import CollectionGUI
+from Config import Config
+from DataBase import DataBase, replace_l10n_key
+from ItemDelegate import ItemDelegate, EnableDelegate
+from MyLogger import log_exception
+from NewItemGUI import NewItemGUI
+from QJsonData import QJsonProxyModel, QJsonModel, QJsonTreeItem
+from SelectGUI import SelectGUI
+from ui.Ui_Item import Ui_Item
+from utils import *
 
 
 class ItemGUI(QWidget, Ui_Item):
