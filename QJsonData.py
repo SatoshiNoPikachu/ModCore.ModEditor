@@ -994,6 +994,16 @@ class QJsonModel(QAbstractItemModel):
                     if v in DataBase.AllGuidPlainRev:
                         return DataBase.AllGuidPlainRev[v]
 
+                if self.is_modify and not item.IsOverride and item.type() != 'list':
+                    t = item.field()
+                    if t in DataBase.RefGuidList:
+                        return DataBase.AllGuidPlainRev[item.value()]
+                    if t in DataBase.RefNameList:
+                        names = DataBase.AllObjNameBase.get(t)
+                        if names is not None:
+                            if (n := names.get(item.value())) is not None:
+                                return n
+
                 if item.field() in DataBase.AllEnumRev:
                     if item.value() in DataBase.AllEnumRev[item.field()]:
                         return DataBase.AllEnumRev[item.field()][item.value()]
