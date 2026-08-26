@@ -21,6 +21,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import ExportToZip
+import Global
 import ItemGUI
 import ModifyItemGUI
 import NewItemGUI
@@ -50,6 +51,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         self.file_model = None
         self.root_depth = 0
         self.tab_item_dict = {}
+
+        Global.MainWindow = self
 
     @log_exception(True)
     def loadLanguage(self):
@@ -446,7 +449,13 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
         if not name:
             return
 
-        file_path = DataBase.AllPath[type_name][name]
+        self.browse_obj(type_name, name)
+
+    def browse_obj(self, type_name, name):
+        file_path = DataBase.AllPath[type_name].get(name)
+        if file_path is None:
+            return
+
         if file_path in self.tab_item_dict:
             self.tabWidget.setCurrentWidget(self.tab_item_dict[file_path]["widget"])
             return

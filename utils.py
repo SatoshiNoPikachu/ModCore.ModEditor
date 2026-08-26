@@ -52,3 +52,10 @@ def resolve_ref_type(key: str) -> str | None:
     if i == -1:
         return None
     return key[:i]
+
+
+def resolve_ref_type_ref(key: str) -> tuple[str, str] | None:
+    i = key.find('|')
+    if i == -1:
+        return None
+    return key[:i], key[i + 1:]

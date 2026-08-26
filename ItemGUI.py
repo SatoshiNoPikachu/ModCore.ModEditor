@@ -8,6 +8,7 @@ from PyQt5.QtWidgets import *
 from CollectionGUI import CollectionGUI
 from Config import Config
 from DataBase import DataBase, replace_l10n_key
+import Global
 from ItemDelegate import ItemDelegate, EnableDelegate
 from MyLogger import log_exception
 from NewItemGUI import NewItemGUI
@@ -45,6 +46,8 @@ class ItemGUI(QWidget, Ui_Item):
         else:
             self.treeView.customContextMenuRequested.connect(self.on_tree_view_custom_context_menu_requested)
 
+        self.treeView.clicked.connect(self.on_tree_view_clicked)
+
         self.showInvalidButton.setText(self.tr("Show invalid entries"))
         self.show_invalid = False
         self.showInvalidButton.clicked.connect(self.on_show_invalid_button_clicked)
@@ -67,6 +70,53 @@ class ItemGUI(QWidget, Ui_Item):
         self.treeView.setModel(self.proxy_model)
         # for i in range(self.model.columnCount()):
         #     self.treeView.resizeColumnToContents(i)
+
+    @log_exception(True)
+    def on_tree_view_clicked(self, index):
+        if not index.isValid():
+            return
+
+        if not (QApplication.keyboardModifiers() & Qt.ControlModifier):
+            return
+
+        model = index.model()
+        if hasattr(model, 'mapToSource'):
+            srcModel, item, srcIndex = model.getSourceModelItemIndex(index)
+        else:
+            srcModel, item, srcIndex = model, index.internalPointer(), index
+
+        if item.type() != 'str':
+            return
+
+        self.try_goto_def(item)
+
+    @staticmethod
+    def get_goto_tv(item: QJsonTreeItem):
+        if item.field() == 'WarpRef':
+            return item.ref_type, item.value()
+
+        return None
+
+    def try_goto_def(self, item: QJsonTreeItem):
+        tv = self.get_goto_tv(item)
+        if tv is None:
+            return
+
+        t, v = tv
+
+        if t in DataBase.RefGuidList:
+            v = DataBase.AllGuidPlainRev.get(v)
+        elif t in DataBase.RefNameList:
+            ref = resolve_ref_type_ref(v)
+            if ref is not None:
+                t, v = ref
+        else:
+            return
+
+        if v is None:
+            return
+
+        Global.MainWindow.browse_obj(t, remove_postfix(v))
 
     @log_exception(True)
     def on_show_invalid_button_clicked(self, checked: bool = False) -> None:
