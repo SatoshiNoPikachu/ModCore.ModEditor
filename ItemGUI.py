@@ -90,8 +90,7 @@ class ItemGUI(QWidget, Ui_Item):
 
         self.try_goto_def(item)
 
-    @staticmethod
-    def get_goto_tv(item: QJsonTreeItem):
+    def get_goto_tv(self, item: QJsonTreeItem):
         if item.field() == 'WarpRef':
             return item.ref_type, item.value()
 

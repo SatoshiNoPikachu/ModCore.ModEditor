@@ -32,13 +32,11 @@ class ModifyItemGUI(ItemGUI):
         target_btn.clicked.connect(self.on_target_btn)
         self.horizontalLayout.insertWidget(4, target_btn)
 
-    @staticmethod
-    def get_goto_tv(item: QJsonTreeItem):
+    def get_goto_tv(self, item: QJsonTreeItem):
         if not item.IsOverride and item.type() != 'list':
             t = item.field()
             if t in DataBase.AllRef:
                 return t, item.value()
-            return None
 
         return super().get_goto_tv(item)
 
