@@ -32,7 +32,7 @@ from MyLogger import logInit, log_exception
 from ui.Ui_Main import Ui_MainWindow
 from utils import *
 
-ModEditorVersion = "1.3.3"
+ModEditorVersion = "1.3.4"
 
 
 class ModEditorGUI(QMainWindow, Ui_MainWindow):
