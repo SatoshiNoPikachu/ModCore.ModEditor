@@ -530,6 +530,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 with path.open("w", encoding='utf-8') as f:
                     json.dump(temp_data, f, sort_keys=True, ensure_ascii=False)
 
+            self.openTreeViewItem(self.file_model.index(str(path)))
+
         except Exception as ex:
             QtCore.qWarning(traceback.format_exc())
         self.init_completer()
@@ -599,6 +601,8 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
                 with path.open("w", encoding='utf-8') as f:
                     json.dump(temp_json, f, sort_keys=True, ensure_ascii=False)
 
+            self.openTreeViewItem(self.file_model.index(str(path)))
+
         except Exception as ex:
             QtCore.qWarning(traceback.format_exc())
             self.init_completer()
@@ -657,6 +661,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if not os.path.exists(card_path):
                 with open(card_path, "w", encoding="utf-8") as f:
                     f.write("{\n\n}")
+                print(card_path)
                 self.openTreeViewItem(self.file_model.index(card_path))
             else:
                 QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
@@ -711,7 +716,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
             if not os.path.exists(path_file):
                 with path_file.open("w", encoding="utf-8") as f:
                     f.write("{\n\n}")
-                self.openTreeViewItem(self.file_model.index(path_file))
+                self.openTreeViewItem(self.file_model.index(str(path_file)))
             else:
                 QMessageBox.warning(self, self.tr("Warning"), self.tr('A file with the same name exists'))
 
