@@ -26,7 +26,7 @@ import ItemGUI
 import ModifyItemGUI
 import NewItemGUI
 import SelectGUI
-from DataBase import DataBase, replace_l10n_key
+from DataBase import DataBase, replace_l10n_key, replace_def_text
 from DataPack import MainPackMissingError
 from MyLogger import logInit, log_exception
 from ui.Ui_Main import Ui_MainWindow
@@ -462,6 +462,9 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
 
         with open(file_path, "r", encoding='utf-8') as f:
             data = json.load(f)
+
+        if Config.ReplaceDefText:
+            replace_def_text(data)
 
         item = ItemGUI.ItemGUI(parent=self.tabWidget, field=type_name, key=file_path, item_name=name, readonly=True)
         item.load_json_data(data)

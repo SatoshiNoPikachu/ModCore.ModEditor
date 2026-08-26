@@ -43,6 +43,25 @@ def replace_l10n_key(data: dict, mod_name: str, obj_name: str, guid: str = "",
             data["ParentObjectID"] = ""
 
 
+def replace_def_text(data: dict):
+    if isinstance(data, list):
+        for item in data:
+            replace_def_text(item)
+        return
+
+    if not isinstance(data, dict):
+        return
+
+    for key, v in data.items():
+        if key == "LocalizationKey" and v != "" and 'DefaultText' in data and (dt := DataBase.AllSimpCn.get(v)):
+            data['DefaultText'] = dt['original']
+        elif isinstance(v, dict):
+            replace_def_text(v)
+        elif isinstance(v, list):
+            for item in v:
+                replace_def_text(item)
+
+
 def delete_keys_from_dict(src_dict, key: str):
     for field in list(src_dict.keys()):
         if field == key:
