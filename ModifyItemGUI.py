@@ -148,7 +148,7 @@ class ModifyItemGUI(ItemGUI):
                     pNewListAct.triggered.connect(self.on_addLoadRefListItem)
                     menu.addAction(pNewListAct)
 
-                if top is None or top.type() != 'list':
+                if top is None or top.field() != item.field():
                     act_override = QAction(self.tr("Override (use with caution)"), menu)
                     act_override.triggered.connect(self.on_make_override)
                     menu.addAction(act_override)
@@ -204,7 +204,7 @@ class ModifyItemGUI(ItemGUI):
                     pLoadListAct.triggered.connect(self.on_loadCollListItem)
                     menu.addAction(pLoadListAct)
 
-                if item.type() != "dict" and (top is None or top.type() != 'list'):
+                if item.type() != "dict" and (item.parent() is None or item.parent().type() != 'list'):
                     act_override = QAction(self.tr("Override (use with caution)"), menu)
                     act_override.triggered.connect(self.on_make_override)
                     menu.addAction(act_override)
@@ -384,13 +384,36 @@ class ModifyItemGUI(ItemGUI):
         else:
             src_model, item, src_index = model, index.internalPointer(), index
 
-        path: list[tuple[QJsonTreeItem, QModelIndex]] = []
-        current: QJsonTreeItem = item
+        if item.parent() is not None and item.parent().type() == 'list':
+            return
 
+        current: QJsonTreeItem = item
         while parent := current.parent():
+            if parent.type() != 'list':
+                current = parent
+                continue
+
+            result = self.addWarpItem(index, "Override")
+            if result is None:
+                return
+
+            parent, parent_index = result
             if parent.type() == 'list':
                 return
 
+            override = parent.childByKey("$override")
+            if override is None:
+                override = self.model.addItem(parent_index, "$override", dict, "", "SpecialWarp", True)
+                override.IsOverride = True
+
+            override_index = self.model.index(override.row(), 0, parent_index)
+            self.model.clone_item(override_index, item).IsOverride = True
+            return
+
+        path: list[tuple[QJsonTreeItem, QModelIndex]] = []
+        current = item
+
+        while parent := current.parent():
             path.append((current, src_index))
             current = parent
             src_index = src_index.parent()
@@ -500,6 +523,17 @@ class ModifyItemGUI(ItemGUI):
                     else:
                         print("Unexpect type 1 !!!")
             else:
+                if mode == "Override":
+                    if warpDataItem is None:
+                        return None
+                    if parentItem.type() == "list":
+                        target = warpDataItem.mChilds.get(childItem.key())
+                        if target is None:
+                            return None
+                        target_index = self.model.index(target.row(), 0, warpDataIndex)
+                        return target, target_index
+                    return warpDataItem, warpDataIndex
+
                 if warpDataItem is None:
                     if src_field in DataBase.RefNameList or src_field in DataBase.RefGuidList or src_field == "ScriptableObject":
                         self.model.addAddRefWarp(childIndex, param, key=childItem.key())
