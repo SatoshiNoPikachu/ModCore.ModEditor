@@ -204,20 +204,10 @@ class QJsonTreeItem(object):
             rootItem.setDepth(parent.depth() + 1)
             if parent.IsOverride:
                 rootItem.IsOverride = True
-                if parent.is_list():
+                if parent.is_list() and not DataBase.is_ref_type(parent.field()):
                     not_new_obj = False
 
-        # try:
-        #     value = value.toVariant()
-        #     jsonType = value.type()
-        # except AttributeError:
-        #     pass
-
-        # try:
-        #     value = value.toObject()
-        #     jsonType = value.type()
-        # except AttributeError:
-        #     pass
+        force_override_valid = rootItem.IsOverride and not_new_obj
 
         if isinstance(value, dict):
             rootItem.setType(dict)
@@ -237,7 +227,7 @@ class QJsonTreeItem(object):
                         value[key] = 0
 
             # process the key/value pairs
-            if rootItem.IsOverride:
+            if force_override_valid:
                 rootItem.setVaild(True)
             elif re.search(pattern_number, str(value)):
                 if rootItem.parent() is not None:
@@ -270,8 +260,7 @@ class QJsonTreeItem(object):
                         child_field = DataBase.AllMetaField.get(key)
 
                     if child_field is not None:
-                        child = QJsonTreeItem.load(v, child_field, rootItem, key, is_modify,
-                                                   not_new_obj)
+                        child = QJsonTreeItem.load(v, child_field, rootItem, key, is_modify, not_new_obj)
                         # child.setField(DataBase.AllTypeField[itemField][key])
 
                         if itemField in DataBase.AllNotes:
@@ -313,7 +302,7 @@ class QJsonTreeItem(object):
 
         elif isinstance(value, list):
             rootItem.setType(list)
-            if len(value) > 0 or rootItem.IsOverride:
+            if len(value) > 0 or force_override_valid:
                 if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
@@ -326,7 +315,7 @@ class QJsonTreeItem(object):
                 child.setField(itemField)
                 rootItem.appendChild(str(i), child)
         else:
-            if value or rootItem.IsOverride:
+            if value or force_override_valid:
                 if rootItem.parent() is not None:
                     rootItem.parent().setVaild(True)
                 rootItem.setVaild(True)
