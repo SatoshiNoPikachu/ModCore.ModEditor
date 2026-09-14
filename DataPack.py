@@ -329,3 +329,7 @@ class DataPack:
     def get_comment(cls, type_name: str, field: str):
         comment = cls.AllComment.get(type_name)
         return comment.get(field) if comment else None
+
+    @classmethod
+    def is_ref_type(cls, type_name: str) -> bool:
+        return type_name in cls.AllRefBase
