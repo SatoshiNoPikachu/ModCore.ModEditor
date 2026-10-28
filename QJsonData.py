@@ -109,6 +109,54 @@ class QJsonTreeItem(object):
         self.mKey = key
         self.display_key = key
 
+    def label(self) -> str:
+        """树显示标签：列表中的字典元素在序号后附加元素内的名字，如 0(0 kids)"""
+        parent = self.mParent
+        if parent is not None and parent.is_list() and self.is_dict():
+            name = self.element_name()
+            if name:
+                return f'{self.mKey}({name})'
+        return self.display_key if self.display_key is not None else str(self.mKey)
+
+    def element_name(self) -> str:
+        """列表元素显示名：优先 *Name 字段（本地化结构取 DefaultText），否则取引用目标的名称"""
+        keys = sorted(self.mChilds.keys(), key=lambda k: k != 'Name')
+        for key in keys:
+            if not key.lower().endswith('name'):
+                continue
+            child = self.mChilds[key]
+            if child.type() == 'str' and child.value():
+                return str(child.value())
+            if child.is_dict():
+                dt = child.childByKey('DefaultText')
+                if dt is not None and dt.value():
+                    return str(dt.value())
+        for child in self.mChilds.values():
+            name = child.ref_name()
+            if name:
+                return name
+        return ''
+
+    def ref_name(self) -> str:
+        """若该项为引用字段，返回引用目标的可读名称"""
+        value = self.value()
+        if not isinstance(value, str) or not value:
+            return ''
+        field = self.field()
+        if field == 'WarpRef':
+            if (t := resolve_ref_type(value)) is not None:
+                if (d := DataBase.AllScriptableObjectRev.get(t)) is not None and (r := d.get(value)):
+                    return r
+            if rt := self.ref_type:
+                if (names := DataBase.AllObjNameBase.get(rt)) is not None and (n := names.get(value)):
+                    return n
+            return DataBase.AllGuidPlainRev.get(value, '')
+        if field in DataBase.RefGuidList:
+            return DataBase.AllGuidPlainRev.get(value, '')
+        if field in DataBase.RefNameList:
+            return value
+        return ''
+
     def setValue(self, value: str):
         if self.mType == "bool" or (self.mType == "str" and self.mField == "Boolean"):
             if value == "True":
@@ -892,9 +940,39 @@ class QJsonModel(QAbstractItemModel):
                     item.setVaild(False)
                 else:
                     item.setVaild(True)
+            else:
+                return False
         else:
             return False
+        self.dataChanged.emit(index, index)
+        # 编辑的若是名字字段（含 LocalizedString 嵌套的 DefaultText），刷新所属列表元素行的标签（序号(名字)）
+        name_item = item if item.key().lower().endswith('name') else None
+        if name_item is None and item.key() == 'DefaultText':
+            p = item.parent()
+            if p is not None and p.key().lower().endswith('name'):
+                name_item = p
+        if name_item is not None:
+            node = name_item
+            while node is not None and node.parent() is not None:
+                if node.parent().is_list() and node.is_dict():
+                    label_index = self.index_of(node)
+                    if label_index.isValid():
+                        self.dataChanged.emit(label_index, label_index)
+                    break
+                node = node.parent()
         return True
+
+    def index_of(self, item: QJsonTreeItem) -> QModelIndex:
+        """由树项自底向上构造其 QModelIndex（第 0 列）"""
+        chain = []
+        node = item
+        while node is not None and node.parent() is not None:
+            chain.append(node)
+            node = node.parent()
+        idx = QModelIndex()
+        for n in reversed(chain):
+            idx = self.index(n.row(), 0, idx)
+        return idx
 
     def flags(self, index: QModelIndex) -> Qt.ItemFlag | Qt.ItemFlags:
         if self.readonly:
@@ -958,7 +1036,7 @@ class QJsonModel(QAbstractItemModel):
 
         if role == Qt.DisplayRole:
             if col == 0:
-                return item.display_key
+                return item.label()
             elif col == 1:
                 if item.type() == "dict" or item.type() == "list":
                     return ""
