@@ -243,7 +243,7 @@ class DataBase(DataPack):
                                 DataBase.AllGuidPlainBase.update(temp)
                                 DataBase.AllScriptableObjectBase.update(temp)
         except Exception as ex:
-            QtCore.qWarning(traceback.format_exc())
+            QtCore.qWarning(bytes(traceback.format_exc(), encoding="utf-8"))
 
     @staticmethod
     def loadName():

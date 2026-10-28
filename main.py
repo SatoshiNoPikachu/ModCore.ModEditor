@@ -63,7 +63,7 @@ class ModEditorGUI(QMainWindow, Ui_MainWindow):
     @log_exception(True)
     def load_config(self):
         self.config = configparser.ConfigParser()
-        self.config.read(os.path.join(QDir.currentPath(), "config.ini"))
+        self.config.read(os.path.join(QDir.currentPath(), "config.ini"), encoding='utf-8')
         if self.config.has_option("Config", "Language"):
             self.language = self.config.get("Config", "Language")
         else:
